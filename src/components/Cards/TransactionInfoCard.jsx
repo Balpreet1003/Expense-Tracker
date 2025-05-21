@@ -1,7 +1,7 @@
 import React from 'react';
 import { LuUtensils, LuTrendingUp, LuTrendingDown, LuTrash2 } from "react-icons/lu";
 
-const TransactionInfoCard = ({ title, icon, date, amount, type, hideDeleteBtn}) => {
+const TransactionInfoCard = ({ title, icon, date, amount, type, hideDeleteBtn, onDelete }) => {
 
       const getAmountStyles = ()=>
             type === "income"? "text-green-500 bg-green-50" : "text-red-500 bg-red-50"
