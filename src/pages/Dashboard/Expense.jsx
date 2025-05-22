@@ -108,7 +108,7 @@ const Expense = () => {
                   document.body.appendChild(link);
                   link.click();
                   link.parentNode.removeChild(link);
-                  //toast.success("Expense details downloaded successfully");
+                  toast.success("Expense details downloaded successfully");
                   window.URL.revokeObjectURL(url);
             }
             catch (error) {
