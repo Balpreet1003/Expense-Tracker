@@ -115,7 +115,7 @@ const Expense = () => {
                   console.error("Failed to download expense details: ", error);
                   toast.error("Failed to download expense details. Please try again.");
             }
-      };
+      }; 
 
       useEffect(() => {
             fetchExpenseDetails();
