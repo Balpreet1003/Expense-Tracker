@@ -18,5 +18,6 @@ Thumbs.db
 # Uploaded files
 uploads/
 
-# Misc
+# Misc files
 *.local
+
