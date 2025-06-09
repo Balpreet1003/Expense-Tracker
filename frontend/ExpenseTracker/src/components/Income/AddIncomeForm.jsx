@@ -21,29 +21,25 @@ const AddIncomeForm = ({onAddIncome}) => {
                         onSelect={(selectIcon) => handleInputChange("icon", selectIcon)}
                   />
 
-                 <Input
-                     value={income.source}
-                     onChange={(target) => handleInputChange("source", target.value)}
-                     label="Source"
-                     placeholder="e.g. Salary, Gifts, Freelancing, etc."
-                     type="text"
-                 />
-
-                 <Input
-                     value={income.amount}
-                     onChange={(target) => handleInputChange("amount", target.value)}
-                     label="Amount"
-                     placeholder=""
-                     type="number"
-                 />
-
                   <Input
-                     value={income.date}
-                     onChange={(target) => handleInputChange("date", target.value)}
-                     label="Date"
-                     placeholder="MM/DD/YYYY"
-                     type="date"
-                 />
+                        value={income.source}
+                        onChange={e => handleInputChange("source", e.target.value)}
+                        label="Source"
+                        placeholder="e.g. Salary, Gifts, Freelancing, etc."
+                        type="text"
+                  />
+                  <Input
+                        value={income.amount}
+                        onChange={e => handleInputChange("amount", e.target.value)}
+                        label="Amount"
+                        type="number"
+                  />
+                  <Input
+                        value={income.date}
+                        onChange={e => handleInputChange("date", e.target.value)}
+                        label="Date"
+                        type="date"
+                  />
 
                   <div className="flex justify-end mt-6">
                         <button 

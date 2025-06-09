@@ -41,5 +41,5 @@
 }
 
 .add-btn-fill {
-  @apply: text-white bg-[#875cf5];
+  @apply text-white bg-[#875cf5];
 }
