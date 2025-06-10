@@ -14,10 +14,15 @@ const app = express();
 //middleware to handle CORS
 app.use(
       cors({
-            origin: [
-                "https://expense-tracker-tzbb.vercel.app", // your frontend domain
-                "http://localhost:5173" // for local development, optional
-            ],
+            origin: function (origin, callback) {
+                  // Allow requests with no origin (like mobile apps, curl, etc.)
+                  if (!origin) return callback(null, true);
+                  if (allowedOrigins.includes(origin)) {
+                        return callback(null, true);
+                  } else {
+                        return callback(new Error("Not allowed by CORS"));
+                  }
+            },
             methods: ["GET", "POST", "PUT", "DELETE"],
             allowedHeaders: [ "Content-Type", "Authorization" ],
             credentials: true // if you use cookies or need credentials
