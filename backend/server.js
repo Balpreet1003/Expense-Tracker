@@ -15,7 +15,7 @@ const app = express();
 app.use(
       cors({
             origin: [
-                "https://expense-tracker-tzbb.vercel.app", // your frontend domain
+                "https://expense-tracker-tzbb.vercel.app/", // your frontend domain
                 "http://localhost:5173" // for local development, optional
             ],
             methods: ["GET", "POST", "PUT", "DELETE"],
