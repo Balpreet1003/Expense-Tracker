@@ -1,5 +1,5 @@
-export const BASE_URL = "http://localhost:8000";
-//export const BASE_URL = "https://expense-tracker-gc9g.vercel.app/";
+//export const BASE_URL = "http://localhost:8000";
+export const BASE_URL = "https://expense-track-git-523766-balpreetsinghgill83-gmailcoms-projects.vercel.app/";
 
 // utils/apiPaths.js
 export const API_PATHS = {
