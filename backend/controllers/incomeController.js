@@ -1,3 +1,4 @@
+const path = require('path'); 
 const xlsx = require('xlsx');
 const Income = require('../models/Income');
 
@@ -61,7 +62,7 @@ exports.downloadIncomeExcel = async (req, res) => {
       const userId = req.user.id;
       
       try {
-            const income = await Income.find({userId}).sort({data: -1});
+            const income = await Income.find({userId}).sort({date: -1});
 
             //prepare data for excel
             const data = income.map((item) => ({
@@ -74,8 +75,9 @@ exports.downloadIncomeExcel = async (req, res) => {
             const wb = xlsx.utils.book_new();
             const ws = xlsx.utils.json_to_sheet(data);
             xlsx.utils.book_append_sheet(wb, ws, "Income");
-            xlsx.writeFile(wb, 'income_details.xlsx');
-            res.download('income_details.xlsx');
+            const filePath = path.join('/tmp', 'income_details.xlsx');
+            xlsx.writeFile(wb, filePath);
+            res.download(filePath);
       }
       catch (error) {
             res.status(500).json({message: "Server Error"});
