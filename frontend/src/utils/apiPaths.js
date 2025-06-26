@@ -1,5 +1,4 @@
-//export const BASE_URL = "http://localhost:8000";
-export const BASE_URL = "https://expense-tracker-cnqa.vercel.app";
+export const BASE_URL = "http://localhost:8000";
 
 // utils/apiPaths.js
 export const API_PATHS = {
@@ -12,7 +11,7 @@ export const API_PATHS = {
             GET_USER_INFO: "/api/v1/auth/getUser",
       },
       DASHBOARD: {
-            GET_DASHBOARD_DATA: "/api/v1/dashboard", // <--- must be this
+            GET_DASHBOARD_DATA: "/api/v1/dashboard",
       },
       INCOME: {
             ADD_INCOME: "/api/v1/income/add",
