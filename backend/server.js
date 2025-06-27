@@ -15,7 +15,8 @@ const app = express();
 app.use(
       cors({
             origin: [
-                "http://localhost:5173" // for local development, optional
+                "http://localhost:5173", // for local development, optional
+                "https://expense-tracker-j4gq.vercel.app", // production URL
             ],
             methods: ["GET", "POST", "PUT", "DELETE"],
             allowedHeaders: [ "Content-Type", "Authorization" ],
