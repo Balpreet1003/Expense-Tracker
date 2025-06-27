@@ -15,12 +15,12 @@ const app = express();
 app.use(
       cors({
             origin: [
-                "http://localhost:5173", // for local development, optional
-                "https://expense-tracker-wjx8.vercel.app", // production URL
+                "http://localhost:5173", // for local development
+                "https://expense-tracker-wjx8.vercel.app", // <-- your frontend production URL
             ],
             methods: ["GET", "POST", "PUT", "DELETE"],
             allowedHeaders: [ "Content-Type", "Authorization" ],
-            credentials: true // if you use cookies or need credentials
+            credentials: true
       }) 
 );
    
