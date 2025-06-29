@@ -17,6 +17,7 @@ app.use(
             origin: [
                 "http://localhost:5173", // for local development
                 "https://expense-tracker-wjx8.vercel.app", // <-- your frontend production URL
+                "https://expense-tracker-ten-zeta-17.vercel.app"
             ],
             methods: ["GET", "POST", "PUT", "DELETE"],
             allowedHeaders: [ "Content-Type", "Authorization" ],

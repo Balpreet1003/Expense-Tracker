@@ -1,25 +1,17 @@
+// filepath: backend/middleware/uploadMiddleware.js
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-//configure storage
-const storage = multer.diskStorage({
-      destination: (req, file, cb) => {
-            cb(null, 'uploads/');
-      },
-      filename: (req, file, cb) => {
-            cb(null,`${Date.now()}-${file.originalname}`);
-      }
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'expense_tracker-profile_images',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ width: 300, height: 300, crop: 'limit' }],
+  },
 });
 
-//file filter
-const fileFilter = (req, file, cb) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-      } else {
-            cb(new Error('Invalid file type. Only JPEG, JPG and PNG are allowed.'), false);
-      }
-};
+const upload = multer({ storage });
 
-const upload = multer({storage, fileFilter});
-
-module.exports = upload; 
+module.exports = upload;

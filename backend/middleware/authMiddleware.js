@@ -18,4 +18,4 @@ exports.protect = async (req, res, next) => {
                   message: "Not authorized, token failed",
             });
       }
-};
+}; 
