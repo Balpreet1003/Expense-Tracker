@@ -62,7 +62,7 @@ exports.downloadIncomeExcel = async (req, res) => {
       const userId = req.user.id;
       
       try {
-            const income = await Income.find({userId}).sort({data: -1});
+            const income = await Income.find({userId}).sort({date: -1});
 
             //prepare data for excel
             const data = income.map((item) => ({
@@ -82,4 +82,4 @@ exports.downloadIncomeExcel = async (req, res) => {
       catch (error) {
             res.status(500).json({message: "Server Error"});
       } 
-}  
+}   
