@@ -1,10 +1,12 @@
 import React from 'react';
-import { LuUtensils, LuTrendingUp, LuTrendingDown, LuTrash2 } from "react-icons/lu";
+import { LuTrendingUp, LuTrendingDown, LuTrash2 } from "react-icons/lu";
+import { BsCashStack } from "react-icons/bs";
+import { MdShoppingCartCheckout } from "react-icons/md";
 
 const TransactionInfoCard = ({ title, icon, date, amount, type, hideDeleteBtn, onDelete }) => {
 
       const getAmountStyles = ()=>
-            type === "income"? "text-green-500 bg-green-50" : "text-red-500 bg-red-50"
+            (type === "Income" || type === "income") ? "text-green-500 bg-green-50" : "text-red-500 bg-red-50"
 
       return (
             <div className="group relative flex items-center gap-4 mt-2 p-3 rounded-lg hover:bg-gray-100/60">
@@ -13,7 +15,7 @@ const TransactionInfoCard = ({ title, icon, date, amount, type, hideDeleteBtn, o
                               icon ? (
                                     <img src={icon} alt={title} className="w-6 h-6" />
                               ) : (
-                                    <LuUtensils />
+                                    (type === "Income" || type === "income") ? <BsCashStack /> : <MdShoppingCartCheckout/>
                               )
                         }
                   </div>
@@ -31,8 +33,8 @@ const TransactionInfoCard = ({ title, icon, date, amount, type, hideDeleteBtn, o
                               )}
                               
                               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${getAmountStyles()}`}>
-                                    <h6 className="text-xs font-medium" >{type ==="income" ? "+" : "-"} ₹{amount}</h6>
-                                    {type === "income" ? <LuTrendingUp/> : <LuTrendingDown/>}
+                                    <h6 className="text-xs font-medium" >{(type === "Income" || type === "income") ? "+" : "-"} ₹{amount}</h6>
+                                    {(type === "Income" || type === "income") ? <LuTrendingUp/> : <LuTrendingDown/>}
                               </div>
                         </div>
                   </div>

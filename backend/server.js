@@ -28,7 +28,7 @@ app.use(
    
 app.use(express.json());
 
-connectDB();
+connectDB(); 
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);

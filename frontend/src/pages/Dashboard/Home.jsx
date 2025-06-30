@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { API_PATHS } from '../../utils/apiPaths';
 import axiosInstance from '../../utils/axiosInstance';
 import { useEffect } from 'react';
-import InfoCard from '../../components/Cards/InfoCard';
+import InfoCard from '../../components/Components Cards/InfoCard';
 import { IoCard } from 'react-icons/io5';
 import { LuHandCoins, LuWalletMinimal } from 'react-icons/lu';
 import { addThousandsSeparator } from '../../utils/helper';
@@ -75,7 +75,7 @@ const Home = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                 <RecentTransactions 
                   transactions={dashboardData?.recentTransactions}
-                  onSeeMore={ ()=> navigate('/expense')  }
+                  onSeeMore={ ()=> navigate('/transactions')  }
                 />
                 <FinanceOverview
                   totalBalance={dashboardData?.totalBalance || 0}
@@ -101,8 +101,6 @@ const Home = () => {
                   data={dashboardData?.last60DaysIncome?.transactions || []}
                   onSeeMore={ ()=> navigate('/income')  }
                 />
-
-
               </div>
             </>
           )}

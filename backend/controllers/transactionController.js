@@ -1,7 +1,7 @@
 const path = require('path'); 
 const xlsx = require('xlsx');
 const fs = require('fs');
-const Income = require('../models/Transaction');
+const Transaction = require('../models/Transaction');
 
 // add transaction
 exports.addTransaction = async (req, res) => {
@@ -14,8 +14,8 @@ exports.addTransaction = async (req, res) => {
             if (!type || !category || !amount || !date || !cards) {
                   return res.status(400).json({ message: "All fields are required" });
             }
-
-            const newTransaction = new Income({
+ 
+            const newTransaction = new Transaction({
                   userId,
                   icon,
                   type,
@@ -24,8 +24,8 @@ exports.addTransaction = async (req, res) => {
                   date: new Date(date),
                   cards,
                   description
-            });
-
+            }); 
+ 
             await newTransaction.save();
             res.status(200).json(newTransaction);
       } 
@@ -39,7 +39,7 @@ exports.getAllTransaction = async (req, res) => {
       const userId = req.user.id;
 
       try {
-            const transactions = await Income.find({ userId }).sort({ date: -1 });
+            const transactions = await Transaction.find({ userId }).sort({ date: -1 });
             res.json(transactions);
       } 
       catch (error) {
@@ -50,7 +50,7 @@ exports.getAllTransaction = async (req, res) => {
 // delete transaction
 exports.deleteTransaction = async (req, res) => {
       try {
-            await Income.findByIdAndDelete(req.params.id);
+            await Transaction.findByIdAndDelete(req.params.id);
             res.status(200).json({ message: "Transaction Deleted" });
       } 
       catch (error) {
@@ -63,7 +63,7 @@ exports.downloadTransactionExcel = async (req, res) => {
       const userId = req.user.id;
 
       try {
-            const transactions = await Income.find({ userId }).sort({ date: -1 });
+            const transactions = await Transaction.find({ userId }).sort({ date: -1 });
 
             // prepare data for excel
             const data = transactions.map((item) => ({

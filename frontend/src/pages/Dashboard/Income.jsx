@@ -22,30 +22,37 @@ const Income = () => {
             data: null,
       });
 
-      //get all income details
+      // Fetch all transactions and filter income
       const fetchIncomeDetails = async () => {
             if(isLoading) return;
 
-            setIsLoading(true);
+            setIsLoading(true);  
 
             try {
-                  const response = await axiosInstance.get(API_PATHS.INCOME.GET_ALL_INCOME);
+                  // Fetch all transactions
+                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL_TRANSACTIONS);
 
-                  if(response.data) setIncomeData(response.data);
+                  // Filter only income transactions
+                  if(response.data) {
+                        const incomeOnly = response.data.filter(
+                              txn => txn.type && txn.type.toLowerCase() === "income"
+                        );
+                        setIncomeData(incomeOnly);
+                  }
             }
             catch (error) {
-                  console.error("Somthing went wrong. Please try again ", error);
+                  console.error("Something went wrong. Please try again ", error);
             }
             finally {
                   setIsLoading(false);
             }
       };
 
-      // Handel Add Income
+      // Handle Add Income (should post to transaction API)
       const handelAddIncome = async (income) => {
-            const {source, amount, date, icon} = income;
+            const {userId, icon, type, category, amount, date, cards, description} = income;
 
-            if (!source.trim()) {
+            if (!category.trim()) {
                   toast.error("Source is required");
                   return;
             }
@@ -59,13 +66,27 @@ const Income = () => {
                   toast.error("Date is required");
                   return;
             }
+            
+            if(!type){
+                  toast.error("Transaction type is required");
+                  return;
+            }
+
+            if(!cards){
+                  toast.error("Card is required");
+                  return;
+            }
 
             try {
-                  await axiosInstance.post(API_PATHS.INCOME.ADD_INCOME, {
-                        source,
-                        amount,
-                        date,
+                  await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
+                        userId,
                         icon,
+                        type,
+                        category,
+                        amount,
+                        date: new Date(date),
+                        cards,
+                        description
                   });
 
                   setOpenAddIncomeMode(false);
@@ -79,10 +100,10 @@ const Income = () => {
             }
       };
 
-      // Handel Delete Income
+      // Handle Delete Income (should delete from transaction API)
       const deleteIncome = async (incomeId) => {
             try {
-                  await axiosInstance.delete(API_PATHS.INCOME.DELETE_INCOME(incomeId));
+                  await axiosInstance.delete(API_PATHS.TRANSACTIONS.DELETE_TRANSACTION(incomeId));
                   setOpenDeleteAlert({ show: false, data: null });
                   toast.success("Income deleted successfully");
                   fetchIncomeDetails();
@@ -94,12 +115,14 @@ const Income = () => {
             }
       };
 
-      // handle download income details
+      // handle download income details (optional: filter income before download)
       const handleDownloadIncomeDetails = async () => {
             try {
-                  const response = await axiosInstance.get(API_PATHS.INCOME.DOWNLOAD_INCOME, { responseType: 'blob' });
+                  const response = await axiosInstance.get(
+                        API_PATHS.INCOME.DOWNLOAD_INCOME, // <-- new endpoint
+                        { responseType: 'blob' }
+                  );
 
-                  //create a url fot the blob
                   const url = window.URL.createObjectURL(new Blob([response.data]));
                   const link = document.createElement("a");
                   link.href = url;
@@ -162,6 +185,6 @@ const Income = () => {
                   </div>
             </DashboardLayout>
       )
-}
+} 
 
 export default Income;

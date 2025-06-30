@@ -1,7 +1,7 @@
 import moment from 'moment'
 import React from 'react'
 import { LuArrowRight } from 'react-icons/lu'
-import TransactionInfoCard from '../Cards/TransactionInfoCard'
+import TransactionInfoCard from '../Components Cards/TransactionInfoCard'
 
 const ExpenseTransactions = ({transactions, onSeeMore}) => {
       return (

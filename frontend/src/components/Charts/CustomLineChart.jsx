@@ -7,7 +7,7 @@ const CustomLineChart = ({ data }) => {
             if(active && payload && payload.length) {
                   return (
                         <div className="bg-white shadow-md rounded-lg p-2 border border-gray-300">
-                              <p className="text-xs font-semibold text-purple-800 mb-1">{payload[0].payload.category}</p>
+                              {/* <p className="text-xs font-semibold text-purple-800 mb-1">{payload[0].payload.category}</p> */}
                               <p className="text-sm text-gray-600">
                                     Amount: <span className="text-sm font-medium text-gray-900">₹{payload[0].payload.amount}</span>
                               </p>
@@ -32,7 +32,7 @@ const CustomLineChart = ({ data }) => {
                               <YAxis tick={{fontSize:12, fill:"#555", stroke:"none"}} />
                               <Tooltip content={CustomTooltip} />
 
-                              <Area type="monotone" dataKey="amount" stroke="#875cf5" fill="url(#colorGradient)" strokeWidth={3} dot={{r: 3, fill: "#ab8df8"}} />
+                              <Area type="monotone" dataKey="amount" stroke="#875cf5" fill="url(#colorGradient)" strokeWidth={3} dot={{r: 0, fill: "#ab8df8"}} />
                         </AreaChart>
                   </ResponsiveContainer>
             </div>

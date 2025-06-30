@@ -1,5 +1,5 @@
 import React from 'react';
-import TransactionInfoCard from "../Cards/TransactionInfoCard";
+import TransactionInfoCard from "../Components Cards/TransactionInfoCard";
 import { LuDownload } from 'react-icons/lu';
 import moment from 'moment';
 
@@ -19,7 +19,7 @@ const IncomeList = ({ transactions, onDeleteIncome, onDownload }) => {
                         {transactions.map((income) => (
                               <TransactionInfoCard 
                                     key={income._id}
-                                    title={income.source}
+                                    title={income.category}
                                     icon={income.icon}
                                     date={moment(income.date).format('DD MMM YYYY')}
                                     amount={income.amount}
@@ -32,4 +32,4 @@ const IncomeList = ({ transactions, onDeleteIncome, onDownload }) => {
       )
 }
 
-export default IncomeList
+export default IncomeList;

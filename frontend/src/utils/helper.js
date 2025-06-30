@@ -41,7 +41,7 @@ export const prepareIncomeBarChartData = (data= []) => {
       const chartData = sortedData.map((item) => ({
             month: moment(item?.date).format("Do MMM"),
             amount: item?.amount,
-            source: item?.source,
+            source: item?.category,
       })); 
       
       return chartData;
@@ -57,4 +57,28 @@ export const prepareExpenseBarChartData = (data = []) => {
       })); 
       
       return chartData;
+}
+
+export const prepareTransactionLineChartData = (data = []) => {
+      // Sort by date ascending
+      const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // Prepare arrays for income and expense
+      const incomeData = [];
+      const expenseData = [];
+
+      sortedData.forEach(item => {
+            const point = {
+                  date: moment(item.date).format("Do MMM YY"),
+                  amount: item.amount,
+                  category: item?.category,
+            };
+            if (item.type === "Income" || item.type === "income") {
+                  incomeData.push(point);
+            } else if (item.type === "Expense" || item.type === "expense") {
+                  expenseData.push(point);
+            }
+      });
+
+      return { incomeData, expenseData };
 }

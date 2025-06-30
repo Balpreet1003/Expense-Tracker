@@ -25,17 +25,24 @@ const Expense = () => {
 
       //get all income details
       const fetchExpenseDetails = async () => {
-            if(isLoading) return;
+            if (isLoading) return;
 
             setIsLoading(true);
 
             try {
-                  const response = await axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSE);
+                  // Fetch all transactions
+                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL_TRANSACTIONS);
 
-                  if(response.data) setExpenseData(response.data);
+                  // Filter only expense transactions
+                  if (response.data) {
+                        const expenseOnly = response.data.filter(
+                              txn => txn.type && txn.type.toLowerCase() === "expense"
+                        );
+                        setExpenseData(expenseOnly);
+                  }
             }
             catch (error) {
-                  console.error("Somthing went wrong. Please try again ", error);
+                  console.error("Something went wrong. Please try again ", error);
             }
             finally {
                   setIsLoading(false);
@@ -98,18 +105,26 @@ const Expense = () => {
       // handle download income details
       const handleDownloadExpenseDetails = async () => {
             try {
-                  const response = await axiosInstance.get(API_PATHS.EXPENSE.DOWNLOAD_EXPENSE, { responseType: 'blob' });
+                  const response = await axiosInstance.get(API_PATHS.EXPENSE.DOWNLOAD_EXPENSE, {
+                        responseType: 'blob'
+                  });
 
-                  //create a url fot the blob
+                  // Try to get filename from response headers, fallback to default
+                  const disposition = response.headers['content-disposition'];
+                  let filename = "expense_details.xlsx";
+                  if (disposition && disposition.indexOf('filename=') !== -1) {
+                        filename = disposition.split('filename=')[1].replace(/"/g, '');
+                  }
+
                   const url = window.URL.createObjectURL(new Blob([response.data]));
                   const link = document.createElement("a");
                   link.href = url;
-                  link.setAttribute("download", "expense_details.xlsx");
+                  link.setAttribute("download", filename);
                   document.body.appendChild(link);
                   link.click();
                   link.parentNode.removeChild(link);
-                  toast.success("Expense details downloaded successfully");
                   window.URL.revokeObjectURL(url);
+                  toast.success("Expense details downloaded successfully");
             }
             catch (error) {
                   console.error("Failed to download expense details: ", error);

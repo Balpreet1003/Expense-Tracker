@@ -16,7 +16,7 @@ const CustomBarChart = ({ data = [] }) => {
 
       //function to generate alternate color
       const getBarColor = (index) => {
-            return (index % 2 === 0) ? "#FF8042" : "#FFC0CB";
+            return (index % 2 === 0) ? "#875cf5" : "#bfa7fc";
       }
 
       const CustomTooltip = ({ active, payload }) => {
@@ -24,8 +24,8 @@ const CustomBarChart = ({ data = [] }) => {
                   return (
                         <div className="bg-white shadow-md rounded-lg p-2 border border-gray-300">
                               <p className="text-xs font-semibold text-purple-800 mb-1">{payload[0].payload.category}</p>
-                              <p className="text-sm text-gray-600">
-                                    Amount: <span className="text-sm font-medium text-gray-900">₹{payload[0].payload.amount}</span>
+                              <p className="text-sm text-gray-600 flex gap-1">
+                                    <p className="text-[#875cf5]">Amount:</p> <span className="text-sm font-medium text-gray-900">₹{payload[0].payload.amount}</span>
                               </p>
                         </div>
                   )
@@ -36,23 +36,23 @@ const CustomBarChart = ({ data = [] }) => {
       return (
             <div className="bg-white mt-6">
                   <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data}>
-                  <CartesianGrid stroke="none"/>
-                  <XAxis dataKey="month" tick={{fontSize:12, fill:"#555", stroke:"none"}} />
-                  <YAxis tick={{fontSize:12, fill:"#555", stroke:"none"}} />
-                  <Tooltip content={CustomTooltip} />
-                  <Bar
-                        dataKey="amount" // <-- fix here
-                        fill="#FF8042"
-                        radius={[10, 10, 0, 0]}
-                        activeDot={{r: 8, fill: "yellow"}}
-                        activeStyle={{fill : "green"}}
-                  >
-                        {data.map((entry, index) => (
-                        <Cell key={index} fill={getBarColor(index)} />
-                        ))}
-                  </Bar>
-                  </BarChart>
+                        <BarChart data={data}>
+                              <CartesianGrid stroke="none"/>
+                              <XAxis dataKey="month" tick={{fontSize:12, fill:"#555", stroke:"none"}} />
+                              <YAxis tick={{fontSize:12, fill:"#555", stroke:"none"}} />
+                              <Tooltip content={CustomTooltip} />
+                              <Bar
+                                    dataKey="amount"
+                                    fill="#875cf5"
+                                    radius={[10, 10, 0, 0]}
+                                    activeDot={{r: 8, fill: "yellow"}}
+                                    activeStyle={{fill : "green"}}
+                              >
+                                    {data.map((entry, index) => (
+                                          <Cell key={index} fill={getBarColor(index)} />
+                                    ))}
+                              </Bar>
+                        </BarChart>
                   </ResponsiveContainer>
             </div>
       )

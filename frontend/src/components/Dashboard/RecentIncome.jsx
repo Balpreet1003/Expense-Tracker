@@ -1,6 +1,6 @@
 import React from 'react';
 import { LuArrowRight } from 'react-icons/lu';
-import TransactionInfoCard from '../Cards/TransactionInfoCard';
+import TransactionInfoCard from '../Components Cards/TransactionInfoCard';
 import moment from 'moment';
 
 const RecentIncome = ({data, onSeeMore}) => {
@@ -17,7 +17,7 @@ const RecentIncome = ({data, onSeeMore}) => {
                   {data?.slice(0, 5).map((income) => (
                         <TransactionInfoCard
                               key={income._id}
-                              title={income.source}
+                              title={income.category}
                               icon={income.icon}
                               date={moment(income.date).format('DD MMM YYYY')}
                               amount={income.amount}

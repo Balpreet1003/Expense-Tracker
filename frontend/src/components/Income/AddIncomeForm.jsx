@@ -1,14 +1,18 @@
-import React from 'react'
-import Input from "../Input/Input"
+import React from 'react';
+import Input from "../Input/Input";
 import EmojiPickerPopup from '../EmojiPickerPopup';
+import CustomDropdown from './CustomDropdown';
 
 const AddIncomeForm = ({onAddIncome}) => {
 
       const [income, setIncome] = React.useState({
-            source: "",
-            amount: "",
+            icon:"",
+            type:"Income",
+            category:"",
+            amount:"",
             date: "",
-            icon: "",
+            cards:"",
+            description:"",
       });
 
       const handleInputChange = (key, value) => setIncome({...income, [key]: value});
@@ -20,12 +24,17 @@ const AddIncomeForm = ({onAddIncome}) => {
                         icon={income.icon}
                         onSelect={(selectIcon) => handleInputChange("icon", selectIcon)}
                   />
-
+                  <CustomDropdown
+                        label="Transaction Type"
+                        data={["Income", "Expense"]}
+                        defaultValue="Income"
+                        placeholder="Select Type"
+                  />
                   <Input
-                        value={income.source}
-                        onChange={e => handleInputChange("source", e.target.value)}
-                        label="Source"
-                        placeholder="e.g. Salary, Gifts, Freelancing, etc."
+                        value={income.category}
+                        onChange={e => handleInputChange("category", e.target.value)}
+                        label="Catagory"
+                        placeholder="e.g. Salary, Gifts, Freelancing, Dinner, Shopping etc."
                         type="text"
                   />
                   <Input
@@ -39,6 +48,20 @@ const AddIncomeForm = ({onAddIncome}) => {
                         onChange={e => handleInputChange("date", e.target.value)}
                         label="Date"
                         type="date"
+                  />
+                  <Input
+                        value={income.cards}
+                        onChange={e => handleInputChange("cards", e.target.value)}
+                        label="Cards"
+                        placeholder="e.g. Debit Card, Credit Card etc."
+                        type="text"
+                  />
+                  <Input
+                        value={income.description}
+                        onChange={e => handleInputChange("description", e.target.value)}
+                        label="Description"
+                        placeholder=""
+                        type="text"
                   />
 
                   <div className="flex justify-end mt-6">
@@ -55,4 +78,4 @@ const AddIncomeForm = ({onAddIncome}) => {
       )
 }
 
-export default AddIncomeForm
+export default AddIncomeForm;
