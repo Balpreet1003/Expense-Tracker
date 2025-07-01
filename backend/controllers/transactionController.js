@@ -71,7 +71,7 @@ exports.downloadTransactionExcel = async (req, res) => {
                   type: item.type,
                   category: item.category,
                   amount: item.amount,
-                  date: item.date.toISOString().split('T')[0],
+                  date: item.date,
                   cards: item.cards,
                   description: item.description
             }));

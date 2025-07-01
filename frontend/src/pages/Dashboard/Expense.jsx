@@ -23,7 +23,7 @@ const Expense = () => {
             data: null,
       });
 
-      //get all income details
+      //get all expense details
       const fetchExpenseDetails = async () => {
             if (isLoading) return;
 
@@ -49,12 +49,12 @@ const Expense = () => {
             }
       };
 
-      // Handel Add Income
+      // Handel Add Expense
       const handelAddExpense = async (expense) => {
-            const {category, amount, date, icon} = expense;
+            const {userId, icon, type, category, amount, date, cards, description} = expense;
 
             if (!category.trim()) {
-                  toast.error("Category is required");
+                  toast.error("Source is required");
                   return;
             }
 
@@ -67,13 +67,27 @@ const Expense = () => {
                   toast.error("Date is required");
                   return;
             }
+            
+            if(!type){
+                  toast.error("Transaction type is required");
+                  return;
+            }
+
+            if(!cards){
+                  toast.error("Card is required");
+                  return;
+            }
 
             try {
-                  await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, {
+                  await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
+                        userId,
+                        icon,
+                        type,
                         category,
                         amount,
-                        date,
-                        icon,
+                        date: new Date(date),
+                        cards,
+                        description
                   });
 
                   setOpenAddExpenseMode(false);
@@ -90,7 +104,7 @@ const Expense = () => {
       // Handel Delete Expense
       const deleteExpense = async (expenseId) => {
             try {
-                  await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(expenseId));
+                  await axiosInstance.delete(API_PATHS.TRANSACTIONS.DELETE_TRANSACTION(expenseId));
                   setOpenDeleteAlert({ show: false, data: null });
                   toast.success("Expense deleted successfully");
                   fetchExpenseDetails();
@@ -102,7 +116,7 @@ const Expense = () => {
             }
       };
 
-      // handle download income details
+      // handle download expense details
       const handleDownloadExpenseDetails = async () => {
             try {
                   const response = await axiosInstance.get(API_PATHS.EXPENSE.DOWNLOAD_EXPENSE, {

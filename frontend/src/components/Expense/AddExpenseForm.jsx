@@ -7,7 +7,7 @@ const AddExpenseForm = ({ onAddExpense }) => {
 
       const [expense, setExpense] = React.useState({
             icon:"",
-            type:"",
+            type:"Expense",
             category:"",
             amount:"",
             date: "",

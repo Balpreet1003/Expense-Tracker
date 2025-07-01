@@ -60,8 +60,14 @@ export const prepareExpenseBarChartData = (data = []) => {
 }
 
 export const prepareTransactionLineChartData = (data = []) => {
+      // Normalize all dates to ISO string for sorting
+      const normalizedData = data.map(item => ({
+            ...item,
+            date: new Date(item.date).toISOString()
+      }));
+
       // Sort by date ascending
-      const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const sortedData = [...normalizedData].sort((a, b) => new Date(a.date) - new Date(b.date));
 
       // Prepare arrays for income and expense
       const incomeData = [];
@@ -69,7 +75,7 @@ export const prepareTransactionLineChartData = (data = []) => {
 
       sortedData.forEach(item => {
             const point = {
-                  date: moment(item.date).format("Do MMM YY"),
+                  date: item.date, // ISO string
                   amount: item.amount,
                   category: item?.category,
             };
@@ -80,5 +86,15 @@ export const prepareTransactionLineChartData = (data = []) => {
             }
       });
 
-      return { incomeData, expenseData };
+      // Format the date for display
+      const formatData = arr =>
+            arr.map(item => ({
+                  ...item,
+                  date: moment(item.date).format("Do MMM YY"),
+            }));
+
+      return {
+            incomeData: formatData(incomeData),
+            expenseData: formatData(expenseData),
+      };
 }
