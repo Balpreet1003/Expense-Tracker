@@ -83,12 +83,6 @@ exports.downloadTransactionExcel = async (req, res) => {
             // append the worksheet to the workbook
             xlsx.utils.book_append_sheet(workbook, worksheet, 'Transactions');
 
-            // ensure the downloads directory exists
-            const downloadsDir = path.join(__dirname, '..', 'downloads');
-            if (!fs.existsSync(downloadsDir)) {
-                  fs.mkdirSync(downloadsDir);
-            }
-
             // generate a file name with timestamp
             const fileName = `transactions_${Date.now()}.xlsx`;
             const filePath = path.join(downloadsDir, fileName);
@@ -98,6 +92,7 @@ exports.downloadTransactionExcel = async (req, res) => {
 
             // send the file as a response
             res.download(filePath, (err) => {
+                  fs.unlink(filePath, () => {}); // delete the file after sending
                   if (err) {
                         res.status(500).json({ message: "Error downloading file" });
                   }
