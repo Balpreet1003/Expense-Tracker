@@ -85,7 +85,7 @@ exports.downloadTransactionExcel = async (req, res) => {
 
             // generate a file name with timestamp
             const fileName = `transactions_${Date.now()}.xlsx`;
-            const filePath = path.join(downloadsDir, fileName);
+            const filePath = path.join('tmp', fileName);
 
             // write the workbook to a file
             xlsx.writeFile(workbook, filePath);
