@@ -29,18 +29,13 @@ exports.downloadIncomeExcel = async (req, res) => {
         xlsx.utils.book_append_sheet(wb, ws, "Income");
 
         // Ensure the downloads directory exists
-        const downloadsDir = path.join(__dirname, '..', 'downloads');
-        if (!fs.existsSync(downloadsDir)) {
-            fs.mkdirSync(downloadsDir);
-        }
-
-        // Save to a file with a timestamp
         const fileName = `income_details_${Date.now()}.xlsx`;
-        const filePath = path.join(downloadsDir, fileName);
+        const filePath = path.join('/tmp', fileName); // Use /tmp for serverless
         xlsx.writeFile(wb, filePath);
 
         // Send file as response
         res.download(filePath, (err) => {
+            fs.unlink(filePath, () => {});
             if (err) {
                 res.status(500).json({ message: "Error downloading file" });
             }
