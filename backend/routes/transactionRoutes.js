@@ -16,4 +16,4 @@ router.get('/get', protect, getAllTransaction);
 router.get("/download", protect, downloadTransactionExcel);
 router.delete('/:id', protect, deleteTransaction);
 
-module.exports = router; 
+module.exports = router;

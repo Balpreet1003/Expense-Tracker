@@ -8,6 +8,7 @@ const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const cardsRoutes = require("./routes/cardsRoutes");
 const { error } = require("console");
 
 const app = express();
@@ -18,8 +19,7 @@ app.use(
             origin: [
                 "http://localhost:5173", // for local development
                 "https://expense-tracker-wjx8.vercel.app", // <-- your frontend production URL
-                "https://expense-tracker-ten-zeta-17.vercel.app"
-            ],
+            ], 
             methods: ["GET", "POST", "PUT", "DELETE"],
             allowedHeaders: [ "Content-Type", "Authorization" ],
             credentials: true
@@ -35,6 +35,7 @@ app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes); 
 app.use("/api/v1/transaction", transactionRoutes);
+app.use("/api/v1/cards", cardsRoutes);
 
 //server uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));  

@@ -32,16 +32,16 @@ export const SIDE_MENU_DATA = [
             icon: LuReceiptIndianRupee, 
             path: "/transactions",
       },
-      {
-            id: "05",
-            label: "Cards",
-            icon: LuWalletCards, 
-            path: "/cards",
-      },
-      {
-            id: "06",
-            label: "Help Center",
-            icon: RiQuestionLine, 
-            path: "/help",
-      },
+      // {
+      //       id: "05",
+      //       label: "Cards",
+      //       icon: LuWalletCards, 
+      //       path: "/cards",
+      // },
+      // {
+      //       id: "06",
+      //       label: "Help Center",
+      //       icon: RiQuestionLine, 
+      //       path: "/help",
+      // },
 ];

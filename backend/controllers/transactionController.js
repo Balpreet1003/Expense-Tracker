@@ -18,7 +18,7 @@ exports.addTransaction = async (req, res) => {
             const newTransaction = new Transaction({
                   userId,
                   icon,
-                  type,
+                  type, 
                   category,
                   amount,
                   date: new Date(date),
