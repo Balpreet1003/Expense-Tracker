@@ -54,6 +54,16 @@ const TransactionsOverview = ({ transactions, onAddTransaction}) => {
 
                   <div className="mt-10">
                         <CustomTransactionLineChart trxIncome={incomeData} trxExpense={expenseData}/>
+                        <div className="flex gap-4 mt-4 items-center justify-center">
+                              <span className="flex items-center  gap-2">
+                                    <span style={{ width: 16, height: 3, background: "#9972fc", display: "inline-block", borderRadius: 2 }}></span>
+                                    <span className="text-xs text-gray-600">Income</span>
+                              </span>
+                              <span className="flex items-center gap-2">
+                                    <span style={{ width: 16, height: 3, background: "#80759c", display: "inline-block", borderRadius: 2 }}></span>
+                                    <span className="text-xs text-gray-600">Expense</span>
+                              </span>
+                        </div>
                   </div>
 
             </div>
