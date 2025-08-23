@@ -62,4 +62,4 @@ const RecentIncomeWithCharts = ({data, totalIncome}) => {
       )
 }
 
-export default RecentIncomeWithCharts
+export default RecentIncomeWithCharts;

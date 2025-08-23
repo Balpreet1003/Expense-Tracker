@@ -94,7 +94,7 @@ const Home = () => {
 
                 <RecentIncomeWithCharts
                   data={dashboardData?.last60DaysIncome?.transactions.slice(0.4) || []}
-                  totalIncome={dashboardData?.totalIncome || 0}
+                  totalIncome={addThousandsSeparator(dashboardData?.last60DaysIncome?.total || 0)}
                 />
 
                 <RecentIncome
@@ -107,6 +107,6 @@ const Home = () => {
         </div>
       </DashboardLayout>
     )
-}
+} 
 
 export default Home;

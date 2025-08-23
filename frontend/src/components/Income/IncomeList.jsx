@@ -14,7 +14,7 @@ const IncomeList = ({ transactions, onDeleteIncome, onDownload }) => {
                               <LuDownload className="text-base" /> Download
                         </button>
                   </div>
-
+ 
                   <div className="grid grid-cols-1 md:grid-cols-2">
                         {transactions.map((income) => (
                               <TransactionInfoCard 
@@ -26,7 +26,7 @@ const IncomeList = ({ transactions, onDeleteIncome, onDownload }) => {
                                     type="income"
                                     onDelete={() => onDeleteIncome(income._id)}
                               />
-                        ))}
+                        ))} 
                   </div>
             </div>
       )

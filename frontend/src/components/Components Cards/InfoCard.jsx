@@ -12,6 +12,6 @@ const InfoCard = ({icon, label, value, color}) => {
                   </div>
             </div>
       )
-}
+} 
 
 export default InfoCard

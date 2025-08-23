@@ -25,7 +25,7 @@ app.use(
             credentials: true
       }) 
 );
-   
+
 app.use(express.json());
 
 connectDB(); 
@@ -41,7 +41,7 @@ app.use("/api/v1/cards", cardsRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));  
 app.get("/", (req, res) => {
       res.send({
-            activestatus: true,
+            activestatus: true, 
             error: false,
             message: "Welcome to the Expense Tracker API",
       })

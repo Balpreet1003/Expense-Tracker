@@ -60,7 +60,7 @@ const Navbar = ({ activeMenu }) => {
                               <button
                                     className="block lg:hidden text-black"
                                     onClick={() => {
-                                    setOpenSideMenu(!openSideMenu)
+                                          setOpenSideMenu(!openSideMenu)
                                     }}
                               >
                                     {openSideMenu ? (

@@ -16,7 +16,7 @@ export const uploadImage = async (imageFile) => {
       catch (error) {
             console.error("Error uploading image:", error);
             throw error;
-      }
+      } 
 }
 
 export default uploadImage;

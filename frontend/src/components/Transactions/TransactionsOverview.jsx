@@ -13,16 +13,17 @@ const TransactionsOverview = ({ transactions, onAddTransaction}) => {
             const grouped = {};
             (transactions || []).forEach(txn => {
                   const dateKey = new Date(txn.date).toISOString().split('T')[0];
-                  const type = txn.type || 'unknown';
-                  const key = `${dateKey}_${type}`;
-                  if (!grouped[key]) {
-                        grouped[key] = {
-                              ...txn,
-                              date: dateKey,
-                              amount: Number(txn.amount) || 0,
+                  if (!grouped[dateKey]) {
+                        grouped[dateKey] = { 
+                              date: dateKey, 
+                              income: 0, 
+                              expense: 0 
                         };
-                  } else {
-                        grouped[key].amount += Number(txn.amount) || 0;
+                  }
+                  if (txn.type === 'Income') {
+                        grouped[dateKey].income += Number(txn.amount) || 0;
+                  } else if (txn.type === 'Expense') {
+                        grouped[dateKey].expense += Number(txn.amount) || 0;
                   }
             });
             return Object.values(grouped);

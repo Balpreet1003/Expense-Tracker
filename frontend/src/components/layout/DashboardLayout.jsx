@@ -20,5 +20,5 @@ const DashboardLayout = ({children, activeMenu}) => {
             </div>
       )
 }
- 
+  
 export default DashboardLayout

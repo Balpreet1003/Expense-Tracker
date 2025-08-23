@@ -5,4 +5,4 @@ const router = express.Router();
 
 router.get('/', protect, getDashboardData);
 
-module.exports = router; 
+module.exports = router;  

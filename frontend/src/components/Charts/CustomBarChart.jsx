@@ -6,7 +6,6 @@ import {
       YAxis,
       CartesianGrid,
       Tooltip,
-      Legend,
       ResponsiveContainer,
       Cell,
 } from "recharts"
@@ -47,6 +46,7 @@ const CustomBarChart = ({ data = [] }) => {
                                     radius={[10, 10, 0, 0]}
                                     activeDot={{r: 8, fill: "yellow"}}
                                     activeStyle={{fill : "green"}}
+                                    maxBarSize={70}
                               >
                                     {data.map((entry, index) => (
                                           <Cell key={index} fill={getBarColor(index)} />
@@ -58,4 +58,4 @@ const CustomBarChart = ({ data = [] }) => {
       )
 }
 
-export default CustomBarChart
+export default CustomBarChart;

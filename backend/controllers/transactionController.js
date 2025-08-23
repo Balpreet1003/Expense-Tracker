@@ -47,7 +47,7 @@ exports.getAllTransaction = async (req, res) => {
       }
 }
 
-// delete transaction
+//delete transaction
 exports.deleteTransaction = async (req, res) => {
       try {
             await Transaction.findByIdAndDelete(req.params.id);
@@ -101,4 +101,4 @@ exports.downloadTransactionExcel = async (req, res) => {
       catch (error) {
             res.status(500).json({ message: "Server Error" });
       }
-}
+} 

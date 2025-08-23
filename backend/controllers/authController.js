@@ -8,7 +8,7 @@ const generateToken = (id) => {
       });
 };
 
-//register user
+//register user 
 exports.registerUser = async (req, res) => {
       const { fullName, email, password, profileImageUrl } = req.body; // <-- changed here
 
@@ -33,7 +33,7 @@ exports.registerUser = async (req, res) => {
                   fullName,
                   email,
                   password,
-                  profileImageUrl, // <-- changed here
+                  profileImageUrl, 
             });
 
             res.status(201).json({
@@ -55,7 +55,7 @@ exports.loginUser = async (req, res) => {
       //validation :  check for missing fields
       if (!email || !password) {
             return res.status(400).json({
-                  message: "Please fill in all fields",
+                  message: "Please fill all fields",
             });
       }
 

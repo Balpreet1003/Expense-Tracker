@@ -76,7 +76,7 @@ const Expense = () => {
             if(!cards){
                   toast.error("Card is required");
                   return;
-            }
+            } 
 
             try {
                   await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {

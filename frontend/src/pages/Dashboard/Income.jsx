@@ -53,7 +53,7 @@ const Income = () => {
             const {userId, icon, type, category, amount, date, cards, description} = income;
 
             if (!category.trim()) {
-                  toast.error("Source is required");
+                  toast.error("Catagory is required");
                   return;
             }
 
@@ -183,7 +183,7 @@ const Income = () => {
                               />
                         </Modal>
                   </div>
-            </DashboardLayout>
+            </DashboardLayout> 
       )
 } 
 

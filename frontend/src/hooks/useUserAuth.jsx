@@ -27,7 +27,7 @@ export const useUserAuth = () => {
                               clearUser();
                               navigate("/login");
                         }
-                  }
+                  } 
             };
  
             fetchUserInfo();

@@ -32,4 +32,4 @@ const ExpenseTransactions = ({transactions, onSeeMore}) => {
       )
 }
 
-export default ExpenseTransactions
+export default ExpenseTransactions;

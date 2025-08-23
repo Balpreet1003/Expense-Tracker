@@ -3,7 +3,7 @@ import moment from "moment";
 export const validateEmail = (email) => {
       const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return regex.test(email);
-};
+}; 
 
 export const getInitials = (name) => {
       if (!name) return "";
@@ -31,7 +31,7 @@ export const prepareExpenseChartData = (data= []) => {
             category: item.category,
             amount: item.amount,
       }));
-
+ 
       return chartData;
 }
 
@@ -60,41 +60,24 @@ export const prepareExpenseBarChartData = (data = []) => {
 }
 
 export const prepareTransactionLineChartData = (data = []) => {
-      // Normalize all dates to ISO string for sorting
-      const normalizedData = data.map(item => ({
-            ...item,
-            date: new Date(item.date).toISOString()
+      // Sort by date ascending
+      const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // Prepare arrays for income and expense, including category if present
+      const incomeData = sortedData.map(item => ({
+            date: moment(item.date).format("Do MMM YY"),
+            amount: item.income,
+            category: item.incomeCategory || null, // add category if available
       }));
 
-      // Sort by date ascending
-      const sortedData = [...normalizedData].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      // Prepare arrays for income and expense
-      const incomeData = [];
-      const expenseData = [];
-
-      sortedData.forEach(item => {
-            const point = {
-                  date: item.date, // ISO string
-                  amount: item.amount,
-                  category: item?.category,
-            };
-            if (item.type === "Income" || item.type === "income") {
-                  incomeData.push(point);
-            } else if (item.type === "Expense" || item.type === "expense") {
-                  expenseData.push(point);
-            }
-      });
-
-      // Format the date for display
-      const formatData = arr =>
-            arr.map(item => ({
-                  ...item,
-                  date: moment(item.date).format("Do MMM YY"),
-            }));
+      const expenseData = sortedData.map(item => ({
+            date: moment(item.date).format("Do MMM YY"),
+            amount: item.expense,
+            category: item.expenseCategory || null, // add category if available
+      }));
 
       return {
-            incomeData: formatData(incomeData),
-            expenseData: formatData(expenseData),
+            incomeData,
+            expenseData,
       };
 }

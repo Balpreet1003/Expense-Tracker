@@ -29,4 +29,4 @@ const RecentIncome = ({data, onSeeMore}) => {
       )
 }
 
-export default RecentIncome
+export default RecentIncome;
