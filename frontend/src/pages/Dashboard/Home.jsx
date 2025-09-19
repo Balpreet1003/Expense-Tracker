@@ -107,6 +107,6 @@ const Home = () => {
         </div>
       </DashboardLayout>
     )
-} 
+}
 
 export default Home;

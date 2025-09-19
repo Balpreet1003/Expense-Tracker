@@ -20,4 +20,4 @@ router.post("/upload-image", upload.single("image"), (req, res) => {
   res.status(200).json({ imageUrl: req.file.path });
 });
 
-module.exports = router; 
+module.exports = router;  
