@@ -1,6 +1,5 @@
 import { cx } from 'flairup';
 import * as React from 'react';
-import { useState } from 'react';
 
 import { darkMode, stylesheet } from '../../../Stylesheet/stylesheet';
 import {
@@ -17,7 +16,6 @@ import { useSearchInputRef } from '../../context/ElementRefContext';
 import { SkinTonePicker } from '../SkinTonePicker/SkinTonePicker';
 
 import { BtnClearSearch } from './BtnClearSearch';
-import { CssSearch } from './CssSearch';
 import { IcnSearch } from './IcnSearch';
 import SVGTimes from './svg/times.svg';
 
@@ -40,7 +38,6 @@ export function SearchContainer() {
 }
 
 export function Search() {
-  const [inc, setInc] = useState(0);
   const closeAllOpenToggles = useCloseAllOpenToggles();
   const SearchInputRef = useSearchInputRef();
   const placeholder = useSearchPlaceHolderConfig();
@@ -52,7 +49,6 @@ export function Search() {
 
   return (
     <Relative className={cx(styles.searchContainer)}>
-      <CssSearch value={value} />
       <input
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus={autoFocus}
@@ -63,10 +59,7 @@ export function Search() {
         aria-controls="epr-search-id"
         placeholder={placeholder}
         onChange={event => {
-          setInc(inc + 1);
-          setTimeout(() => {
-            onChange(event?.target?.value ?? value);
-          });
+          onChange(event?.target?.value ?? value);
         }}
         ref={SearchInputRef}
       />
@@ -115,11 +108,11 @@ const styles = stylesheet.create({
     padding: 'var(--epr-search-input-padding)',
     height: 'var(--epr-search-input-height)',
     backgroundColor: 'var(--epr-search-input-bg-color)',
-    border: '1px solid var(--epr-search-input-bg-color)',
+    border: '1px solid var(--epr-search-border-color)',
     width: '100%',
     ':focus': {
       backgroundColor: 'var(--epr-search-input-bg-color-active)',
-      border: '1px solid var(--epr-search-border-color)'
+      border: '1px solid var(--epr-search-border-color-active)'
     },
     '::placeholder': {
       color: 'var(--epr-search-input-placeholder-color)'

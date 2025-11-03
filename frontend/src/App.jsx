@@ -16,6 +16,7 @@ import Cards from './pages/Dashboard/Cards';
 import Transactions from './pages/Dashboard/Transactions';
 import Help from './pages/Dashboard/Help';
 import { Toaster } from'react-hot-toast';
+import AiAnalyzer from './pages/Dashboard/AiAnalyzer';
 
 const App = () => {
   return (
@@ -30,6 +31,7 @@ const App = () => {
             <Route path="/income" element={<Income />} />
             <Route path="/expense" element={<Expense />} />
             <Route path="/profile" element={<EditProfile />} />
+            <Route path="/ai-analyser" element={<AiAnalyzer/>} />
             <Route path="/cards" element={<Cards />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/help" element={<Help />} />

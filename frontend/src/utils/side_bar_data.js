@@ -5,7 +5,10 @@ import {
       LuWalletCards,
       LuReceiptIndianRupee,
 } from "react-icons/lu";
-import { RiQuestionLine } from "react-icons/ri"
+import { 
+      RiQuestionLine,
+      RiSparkling2Line
+} from "react-icons/ri"
 
 export const SIDE_MENU_DATA = [
       {
@@ -31,6 +34,12 @@ export const SIDE_MENU_DATA = [
             label: "Transactions",
             icon: LuReceiptIndianRupee, 
             path: "/transactions",
+      },
+      {
+            id: "05",
+            label: "AI Analyser",
+            icon: RiSparkling2Line, 
+            path: "/ai-analyser",
       },
       // {
       //       id: "05",
