@@ -9,6 +9,7 @@ const expenseRoutes = require("./src/routes/expenseRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
 const transactionRoutes = require("./src/routes/transactionRoutes");
 const cardsRoutes = require("./src/routes/cardsRoutes");
+const aiRoutes = require("./src/routes/aiRoutes");
 const { error } = require("console");
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes); 
 app.use("/api/v1/transaction", transactionRoutes);
 app.use("/api/v1/cards", cardsRoutes);
+app.use("/api/v1/ai", aiRoutes);
 
 //server uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));  

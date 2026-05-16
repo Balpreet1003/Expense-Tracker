@@ -4,7 +4,6 @@ import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../../src/utils/apiPaths';
-import { generateAIResponse } from '../../utils/geminiService';
 
 const AiChat = () => {
     const [messages, setMessages] = useState(() => {
@@ -20,21 +19,7 @@ const AiChat = () => {
     });
     const [chatAnimation, setChatAnimation] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [transactions, setTransactions] = useState([]);
     const scrollRef = useRef(null);
-
-    // Fetch transactions when component mounts
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL_TRANSACTIONS); 
-                setTransactions(response.data);
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            }
-        };
-        fetchTransactions();
-    }, []);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,10 +42,11 @@ const AiChat = () => {
 
         try {
             setChatAnimation(true);
-            const response = await generateAIResponse(text.trim(), transactions);
+            const response = await axiosInstance.post(API_PATHS.AI.ANALYZE, {
+                prompt: text.trim(),
+            });
 
-            // support service returning either a string or an object { reply: string }
-            const replyText = response?.reply ?? response;
+            const replyText = response?.data?.reply ?? 'Sorry, I could not generate a response right now.';
 
             const botMsg = { id: Date.now() + 1, role: 'bot', text: replyText };
             setMessages(prev => [...prev, botMsg]);
