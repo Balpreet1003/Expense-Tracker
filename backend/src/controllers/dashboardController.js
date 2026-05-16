@@ -1,41 +1,94 @@
-const Transaction = require('../models/Transaction');
-const { Types } = require('mongoose');
+const { query } = require('../config/db');
+const { toTransactionResponse } = require('../utils/pgHelpers');
 
 // Dashboard data using Transaction model
 exports.getDashboardData = async (req, res) => {
     try {
         const userId = req.user.id;
-        const userObjectId = new Types.ObjectId(String(userId));
+        const [summaryResult, recentResult, income60Result, expense30Result] = await Promise.all([
+            query(
+                `SELECT
+                     COALESCE(SUM(CASE WHEN LOWER(type::text) = 'income' THEN amount ELSE 0 END), 0) AS total_income,
+                     COALESCE(SUM(CASE WHEN LOWER(type::text) = 'expense' THEN amount ELSE 0 END), 0) AS total_expense
+                 FROM transactions
+                 WHERE user_id = $1`,
+                [userId]
+            ),
+            query(
+                `SELECT t.id,
+                        t.user_id,
+                        t.card_id,
+                        t.cards,
+                        t.icon,
+                        t.type,
+                        t.category,
+                        t.amount,
+                        t.date,
+                        t.description,
+                        t.created_at,
+                        t.updated_at,
+                        c.card_name
+                 FROM transactions t
+                 LEFT JOIN cards c ON c.id = t.card_id
+                 WHERE t.user_id = $1
+                 ORDER BY t.date DESC, t.id DESC
+                 LIMIT 5`,
+                [userId]
+            ),
+            query(
+                `SELECT t.id,
+                        t.user_id,
+                        t.card_id,
+                        t.cards,
+                        t.icon,
+                        t.type,
+                        t.category,
+                        t.amount,
+                        t.date,
+                        t.description,
+                        t.created_at,
+                        t.updated_at,
+                        c.card_name
+                 FROM transactions t
+                 LEFT JOIN cards c ON c.id = t.card_id
+                 WHERE t.user_id = $1
+                                     AND LOWER(t.type::text) = 'income'
+                   AND t.date >= NOW() - INTERVAL '60 days'
+                 ORDER BY t.date DESC, t.id DESC`,
+                [userId]
+            ),
+            query(
+                `SELECT t.id,
+                        t.user_id,
+                        t.card_id,
+                        t.cards,
+                        t.icon,
+                        t.type,
+                        t.category,
+                        t.amount,
+                        t.date,
+                        t.description,
+                        t.created_at,
+                        t.updated_at,
+                        c.card_name
+                 FROM transactions t
+                 LEFT JOIN cards c ON c.id = t.card_id
+                 WHERE t.user_id = $1
+                                     AND LOWER(t.type::text) = 'expense'
+                   AND t.date >= NOW() - INTERVAL '30 days'
+                 ORDER BY t.date DESC, t.id DESC`,
+                [userId]
+            ),
+        ]);
 
-        // Fetch all transactions for the user
-        const allTransactions = await Transaction.find({ userId: { $in: [userId, userObjectId] } }).sort({ date: -1 });
+        const totalIncome = Number(summaryResult.rows[0]?.total_income || 0);
+        const totalExpense = Number(summaryResult.rows[0]?.total_expense || 0);
+        const lastTransactions = recentResult.rows.map(toTransactionResponse);
+        const last60DaysIncomeTransactions = income60Result.rows.map(toTransactionResponse);
+        const last30DaysExpenseTransactions = expense30Result.rows.map(toTransactionResponse);
 
-        // Calculate total income and expense
-        let totalIncome = 0;
-        let totalExpense = 0;
-        allTransactions.forEach(txn => {
-            if (txn.type.toLowerCase() === 'income') totalIncome += txn.amount;
-            if (txn.type.toLowerCase() === 'expense') totalExpense += txn.amount;
-        });
-
-        // Get transactions in last 60 days (income) and 30 days (expense)
-        const now = new Date();
-        const last60Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-        const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-        const last60DaysIncomeTransactions = allTransactions.filter(
-            txn => txn.type.toLowerCase() === 'income' && txn.date >= last60Days
-        );
-        const last30DaysExpenseTransactions = allTransactions.filter(
-            txn => txn.type.toLowerCase() === 'expense' && txn.date >= last30Days
-        );
-
-        // Sums for last 60/30 days
-        const incomeLast60Days = last60DaysIncomeTransactions.reduce((sum, txn) => sum + txn.amount, 0);
-        const expenseLast30Days = last30DaysExpenseTransactions.reduce((sum, txn) => sum + txn.amount, 0);
-
-        // Last 5 transactions (income and expense, sorted by date)
-        const lastTransactions = allTransactions.slice(0, 5);
+        const incomeLast60Days = last60DaysIncomeTransactions.reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+        const expenseLast30Days = last30DaysExpenseTransactions.reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
 
         // Final response
         res.json({

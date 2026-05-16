@@ -50,7 +50,7 @@ const Income = () => {
 
       // Handle Add Income (should post to transaction API)
       const handelAddIncome = async (income) => {
-            const {userId, icon, type, category, amount, date, cards, description} = income;
+            const {userId, icon, type, category, amount, date, description} = income;
 
             if (!category.trim()) {
                   toast.error("Catagory is required");
@@ -72,11 +72,6 @@ const Income = () => {
                   return;
             }
 
-            if(!cards){
-                  toast.error("Card is required");
-                  return;
-            }
-
             try {
                   await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
                         userId,
@@ -85,7 +80,6 @@ const Income = () => {
                         category,
                         amount,
                         date: new Date(date),
-                        cards,
                         description
                   });
 

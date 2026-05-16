@@ -11,7 +11,6 @@ const AddExpenseForm = ({ onAddExpense }) => {
             category:"",
             amount:"",
             date: "",
-            cards:"",
             description:"",
       });
 
@@ -48,13 +47,6 @@ const AddExpenseForm = ({ onAddExpense }) => {
                         onChange={e => handleInputChange("date", e.target.value)}
                         label="Date"
                         type="date"
-                  />
-                  <Input
-                        value={expense.source}
-                        onChange={e => handleInputChange("cards", e.target.value)}
-                        label="Cards"
-                        placeholder="e.g. Debit Card, Credit Card etc."
-                        type="text"
                   />
                   <Input
                         value={expense.source}
