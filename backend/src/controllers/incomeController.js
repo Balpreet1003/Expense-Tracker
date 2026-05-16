@@ -1,27 +1,35 @@
 const path = require('path'); 
 const xlsx = require('xlsx');
 const fs = require('fs');
-const Transaction = require('../models/Transaction');
+const { query } = require('../config/db');
+const { toTransactionExcelRow } = require('../utils/pgHelpers');
 
 // Download Excel for Income (from Transaction collection)
 exports.downloadIncomeExcel = async (req, res) => {
     const userId = req.user.id;
     try {
-        // Fetch only income transactions for this user
-        const income = await Transaction.find({ 
-            userId, 
-            type: { $regex: /^income$/i } // case-insensitive match
-        }).sort({ date: -1 });
+        const result = await query(
+            `SELECT t.id,
+                    t.user_id,
+                    t.card_id,
+                    t.cards,
+                    t.icon,
+                    t.type,
+                    t.category,
+                    t.amount,
+                    t.date,
+                    t.description,
+                    c.card_name
+             FROM transactions t
+             LEFT JOIN cards c ON c.id = t.card_id
+             WHERE t.user_id = $1
+                             AND LOWER(t.type::text) = 'income'
+             ORDER BY t.date DESC, t.id DESC`,
+            [userId]
+        );
 
         // Prepare data for excel
-        const data = income.map((item) => ({
-            category: item.category,
-            amount: item.amount,
-            date: item.date,
-            icon: item.icon,
-            cards: item.cards,
-            description: item.description,
-        }));
+        const data = result.rows.map(toTransactionExcelRow);
 
         // Create excel file
         const wb = xlsx.utils.book_new();

@@ -51,7 +51,7 @@ const Expense = () => {
 
       // Handel Add Expense
       const handelAddExpense = async (expense) => {
-            const {userId, icon, type, category, amount, date, cards, description} = expense;
+            const {userId, icon, type, category, amount, date, description} = expense;
 
             if (!category.trim()) {
                   toast.error("Source is required");
@@ -73,11 +73,6 @@ const Expense = () => {
                   return;
             }
 
-            if(!cards){
-                  toast.error("Card is required");
-                  return;
-            } 
-
             try {
                   await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
                         userId,
@@ -86,7 +81,6 @@ const Expense = () => {
                         category,
                         amount,
                         date: new Date(date),
-                        cards,
                         description
                   });
 

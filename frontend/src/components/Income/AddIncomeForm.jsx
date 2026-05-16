@@ -11,7 +11,6 @@ const AddIncomeForm = ({onAddIncome}) => {
             category:"",
             amount:"",
             date: "",
-            cards:"",
             description:"",
       });
 
@@ -48,13 +47,6 @@ const AddIncomeForm = ({onAddIncome}) => {
                         onChange={e => handleInputChange("date", e.target.value)}
                         label="Date"
                         type="date"
-                  />
-                  <Input
-                        value={income.cards}
-                        onChange={e => handleInputChange("cards", e.target.value)}
-                        label="Cards"
-                        placeholder="e.g. Debit Card, Credit Card etc."
-                        type="text"
                   />
                   <Input
                         value={income.description}

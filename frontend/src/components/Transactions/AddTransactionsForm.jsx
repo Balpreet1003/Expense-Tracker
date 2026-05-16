@@ -11,7 +11,6 @@ const AddTransactionsForm = ({onAddTransaction}) => {
             category:"",
             amount:"",
             date: "",
-            cards:"",
             description:"",
       });
 
@@ -56,13 +55,6 @@ const AddTransactionsForm = ({onAddTransaction}) => {
                         onChange={e => handleInputChange("date", e.target.value)}
                         label="Date"
                         type="date"
-                  />
-                  <Input
-                        value={transaction.source}
-                        onChange={e => handleInputChange("cards", e.target.value)}
-                        label="Cards"
-                        placeholder="e.g. Debit Card, Credit Card etc."
-                        type="text"
                   />
                   <Input
                         value={transaction.source}

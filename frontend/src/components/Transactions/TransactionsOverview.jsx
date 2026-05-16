@@ -20,9 +20,9 @@ const TransactionsOverview = ({ transactions, onAddTransaction}) => {
                               expense: 0 
                         };
                   }
-                  if (txn.type === 'Income') {
+                  if (txn.type === 'Income' || txn.type === 'income') {
                         grouped[dateKey].income += Number(txn.amount) || 0;
-                  } else if (txn.type === 'Expense') {
+                  } else if (txn.type === 'Expense' || txn.type === 'expense') {
                         grouped[dateKey].expense += Number(txn.amount) || 0;
                   }
             });

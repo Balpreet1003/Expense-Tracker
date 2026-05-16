@@ -1,33 +1,90 @@
 const path = require('path'); 
 const xlsx = require('xlsx');
 const fs = require('fs');
-const Transaction = require('../models/Transaction');
+const { pool, query } = require('../config/db');
+const {
+      parseIntegerId,
+      parsePositiveAmount,
+      toTransactionResponse,
+      toTransactionExcelRow,
+} = require('../utils/pgHelpers');
+
+const normalizeTransactionType = (value) => {
+      if (typeof value !== 'string') {
+            return '';
+      }
+
+      return value.trim().toLowerCase();
+};
+
+const parseTransactionDate = (value) => {
+      if (typeof value !== 'string' && !(value instanceof Date)) {
+            return null;
+      }
+
+      const date = value instanceof Date ? value : new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+            return null;
+      }
+
+      return date;
+};
 
 // add transaction
 exports.addTransaction = async (req, res) => {
       const userId = req.user.id;
 
       try {
-            const { icon, type, category, amount, date, cards, description } = req.body;
+            const icon = typeof req.body.icon === 'string' ? req.body.icon.trim() : '';
+            const type = normalizeTransactionType(req.body.type);
+            const category = typeof req.body.category === 'string' ? req.body.category.trim() : '';
+            const amount = parsePositiveAmount(req.body.amount);
+            const date = parseTransactionDate(req.body.date);
+            const description = typeof req.body.description === 'string' ? req.body.description.trim() : '';
+            const cardId = parseIntegerId(req.body.cardId ?? req.body.card_id);
+            const cards = typeof req.body.cards === 'string' ? req.body.cards.trim() : '';
 
             // validation: check for missing fields
-            if (!type || !category || !amount || !date || !cards) {
+            if (!type || !category || amount === null || !date) {
                   return res.status(400).json({ message: "All fields are required" });
             }
+
+            if (!['income', 'expense'].includes(type)) {
+                  return res.status(400).json({ message: "Transaction type must be income or expense" });
+            }
+
+            let resolvedCardName = cards;
+            let resolvedCardId = null;
+
+            if (cardId) {
+                  const cardResult = await query(
+                        `SELECT id, card_name
+                         FROM cards
+                         WHERE id = $1 AND user_id = $2
+                         LIMIT 1`,
+                        [cardId, userId]
+                  );
+
+                  if (!cardResult.rowCount) {
+                        return res.status(404).json({ message: "Card not found" });
+                  }
+
+                  resolvedCardId = cardResult.rows[0].id;
+
+                  if (!resolvedCardName) {
+                        resolvedCardName = cardResult.rows[0].card_name;
+                  }
+            }
  
-            const newTransaction = new Transaction({
-                  userId,
-                  icon,
-                  type, 
-                  category,
-                  amount,
-                  date: new Date(date),
-                  cards,
-                  description
-            }); 
- 
-            await newTransaction.save();
-            res.status(200).json(newTransaction);
+            const result = await query(
+                  `INSERT INTO transactions (user_id, card_id, cards, icon, type, category, amount, date, description)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                   RETURNING id, user_id, card_id, cards, icon, type, category, amount, date, description, created_at, updated_at`,
+                  [userId, resolvedCardId, resolvedCardName, icon, type, category, amount, date, description]
+            );
+
+            res.status(201).json(toTransactionResponse(result.rows[0]));
       } 
       catch (error) {
             res.status(500).json({ message: "Server Error" });
@@ -39,8 +96,28 @@ exports.getAllTransaction = async (req, res) => {
       const userId = req.user.id;
 
       try {
-            const transactions = await Transaction.find({ userId }).sort({ date: -1 });
-            res.json(transactions);
+            const result = await query(
+                  `SELECT t.id,
+                          t.user_id,
+                          t.card_id,
+                          t.cards,
+                          t.icon,
+                          t.type,
+                          t.category,
+                          t.amount,
+                          t.date,
+                          t.description,
+                          t.created_at,
+                          t.updated_at,
+                          c.card_name
+                   FROM transactions t
+                   LEFT JOIN cards c ON c.id = t.card_id
+                   WHERE t.user_id = $1
+                   ORDER BY t.date DESC, t.id DESC`,
+                  [userId]
+            );
+
+            res.json(result.rows.map(toTransactionResponse));
       } 
       catch (error) {
             res.status(500).json({ message: "Server Error" });
@@ -50,7 +127,23 @@ exports.getAllTransaction = async (req, res) => {
 //delete transaction
 exports.deleteTransaction = async (req, res) => {
       try {
-            await Transaction.findByIdAndDelete(req.params.id);
+            const transactionId = parseIntegerId(req.params.id);
+
+            if (!transactionId) {
+                  return res.status(400).json({ message: "Invalid transaction id" });
+            }
+
+            const result = await query(
+                  `DELETE FROM transactions
+                   WHERE id = $1 AND user_id = $2
+                   RETURNING id`,
+                  [transactionId, req.user.id]
+            );
+
+            if (!result.rowCount) {
+                  return res.status(404).json({ message: "Transaction not found" });
+            }
+
             res.status(200).json({ message: "Transaction Deleted" });
       } 
       catch (error) {
@@ -63,18 +156,27 @@ exports.downloadTransactionExcel = async (req, res) => {
       const userId = req.user.id;
 
       try {
-            const transactions = await Transaction.find({ userId }).sort({ date: -1 });
+            const result = await query(
+                  `SELECT t.id,
+                          t.user_id,
+                          t.card_id,
+                          t.cards,
+                          t.icon,
+                          t.type,
+                          t.category,
+                          t.amount,
+                          t.date,
+                          t.description,
+                          c.card_name
+                   FROM transactions t
+                   LEFT JOIN cards c ON c.id = t.card_id
+                   WHERE t.user_id = $1
+                   ORDER BY t.date DESC, t.id DESC`,
+                  [userId]
+            );
 
             // prepare data for excel
-            const data = transactions.map((item) => ({
-                  icon: item.icon,
-                  type: item.type,
-                  category: item.category,
-                  amount: item.amount,
-                  date: item.date,
-                  cards: item.cards,
-                  description: item.description
-            }));
+            const data = result.rows.map(toTransactionExcelRow);
 
             // create a new workbook and add a worksheet
             const workbook = xlsx.utils.book_new();
