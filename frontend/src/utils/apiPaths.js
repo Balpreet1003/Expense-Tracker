@@ -1,5 +1,5 @@
-export const BASE_URL = "https://expense-tracker-ten-zeta-17.vercel.app";
-// export const BASE_URL = "http://localhost:8000";
+// export const BASE_URL = "https://expense-tracker-ten-zeta-17.vercel.app";
+export const BASE_URL = "http://localhost:8000";
 
 // utils/apiPaths.js
 export const API_PATHS = {
@@ -13,6 +13,9 @@ export const API_PATHS = {
       },
       DASHBOARD: {
             GET_DASHBOARD_DATA: "/api/v1/dashboard",
+      },
+      AI: {
+            ANALYZE: "/api/v1/ai/analyze",
       },
       INCOME: {
             DOWNLOAD_INCOME: "/api/v1/income/download-income",
