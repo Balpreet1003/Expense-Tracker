@@ -15,16 +15,26 @@ const { error } = require("console");
 const app = express();
 
 //middleware to handle CORS
+// Configure CORS to allow requests from the frontend.
+// Use an allowlist and echo the incoming origin when allowed so the
+// Access-Control-Allow-Origin header is present for preflight requests.
+const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'https://expense-tracker-wjx8.vercel.app',
+];
+
 app.use(
       cors({
-            origin: [
-                "http://localhost:5173", // for local development
-                "https://expense-tracker-wjx8.vercel.app", // <-- your frontend production URL
-            ], 
-            methods: ["GET", "POST", "PUT", "DELETE"],
-            allowedHeaders: [ "Content-Type", "Authorization" ],
-            credentials: true
-      }) 
+            origin: (origin, callback) => {
+                  // Allow requests with no origin (server-to-server, mobile, curl)
+                  if (!origin) return callback(null, true);
+                  if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+                  return callback(new Error('CORS policy: Origin not allowed'), false);
+            },
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization'],
+            credentials: true,
+      })
 );
 
 app.use(express.json());
