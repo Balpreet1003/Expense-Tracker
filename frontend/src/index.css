@@ -18,6 +18,10 @@
     margin: 0; /* Ensure no default margin */
     padding: 0; /* Ensure no default padding */
   }
+
+  button:not(:disabled):hover {
+    cursor: pointer;
+  }
 }
 
 .input-box {
