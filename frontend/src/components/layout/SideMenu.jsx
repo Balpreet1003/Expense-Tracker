@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useRef, useState} from 'react';
 import { SIDE_MENU_DATA } from '../../utils/side_bar_data';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
-import CharAvatar from '../Components Cards/CharAvatar';
+import CharAvatar from '../Components_Cards/CharAvatar';
 import { LuChevronUp } from 'react-icons/lu';
 import { USER_DROPDOWN_DATA } from '../../utils/user_dropdown_data';
 
@@ -111,7 +111,7 @@ const SideMenu = ({activeMenu}) => {
                         userDropdownOpen && (
                               <div
                                     ref={dropdownRef}
-                                    className="absolute left-[20px] bottom-[64px] bg-white border border-gray-200/50 rounded-lg shadow-lg p-4 w-53"
+                                    className="absolute left-5 bottom-16 bg-white border border-gray-200/50 rounded-lg shadow-lg p-4 w-53"
                               >
                                     <ul>
                                           {USER_DROPDOWN_DATA.map((item, index) => (

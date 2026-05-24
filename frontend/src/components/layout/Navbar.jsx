@@ -1,17 +1,18 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { HiOutlineMenu, HiOutlineX } from 'react-icons/hi';
 import SideMenu from './SideMenu';
-import CharAvatar from '../Components Cards/CharAvatar';
+import CharAvatar from '../Components_Cards/CharAvatar';
 import { UserContext } from '../../context/UserContext';
 import { LuChevronDown } from 'react-icons/lu';
 import { USER_DROPDOWN_DATA } from '../../utils/user_dropdown_data';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = ({ activeMenu }) => {
       const [openSideMenu, setOpenSideMenu] = useState(false);
       const [userDropdownOpen, setUserDropdownOpen] = useState(false);
       const { user, clearUser } = useContext(UserContext);
       const navigate = useNavigate();
+      const location = useLocation();
 
       const dropdownRef = useRef(null);
       const buttonRef = useRef(null);
@@ -38,12 +39,33 @@ const Navbar = ({ activeMenu }) => {
             };
       }, [userDropdownOpen]);
 
+      const slugify = (value = '') =>
+            String(value)
+                  .trim()
+                  .toLowerCase()
+                  .replace(/\s+/g, '-')
+                  .replace(/[^a-z0-9\-]/g, '');
+
       const handelClick = (route) => {
-      if (route === "logout") {
-            handelLogout();
-            return;
-      }
-      navigate(route);
+            if (route === 'logout') {
+                  handelLogout();
+                  return;
+            }
+
+            // Special-case profile path: navigate to /profile/:username
+            if (route === '/profile' || route === 'profile') {
+                  const raw = user?.username || user?.fullName || user?.email || '';
+                  const username = slugify(raw) || '';
+                  if (!username) {
+                        // fallback to /profile
+                        navigate('/profile', { state: { from: location.pathname } });
+                        return;
+                  }
+                  navigate(`/profile/${username}`, { state: { from: location.pathname } });
+                  return;
+            }
+
+            navigate(route);
       };
 
       const handelLogout = () => {
@@ -117,7 +139,7 @@ const Navbar = ({ activeMenu }) => {
                               userDropdownOpen && (
                                     <div
                                           ref={dropdownRef}
-                                          className="absolute right-[28px] top-[75px] bg-white border border-gray-200/50 rounded-lg shadow-lg p-4 w-53"
+                                          className="absolute right-7 top-[75px] bg-white border border-gray-200/50 rounded-lg shadow-lg p-4 w-53"
                                     >
                                           <ul>
                                                 {USER_DROPDOWN_DATA.map((item, index) => (
@@ -126,7 +148,7 @@ const Navbar = ({ activeMenu }) => {
                                                             className="flex gap-2 item-center py-2 px-3 hover:bg-gray-100 cursor-pointer w-full text-left rounded-lg"
                                                             onClick={() => handelClick(item.path)}
                                                       >
-                                                            <item.icon className="text-xl" />
+                                                            <item.icon className="text-l" />
                                                             {item.label}
                                                       </button>
                                                 ))}

@@ -1,0 +1,13 @@
+{
+  "watch": ["server.js", "src"],
+  "ext": "js,mjs,cjs",
+  "ignore": [
+    "node_modules/**",
+    "uploads/**",
+    "backup.sql",
+    "package-lock.json",
+    "vercel.json",
+    "*.xlsx"
+  ],
+  "delay": "500"
+}
