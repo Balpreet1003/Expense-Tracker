@@ -5,18 +5,17 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
-import Login from './pages/Auth/Login';
-import SignUp from './pages/Auth/SignUp';
-import Home from './pages/Dashboard/Home';
-import Income from './pages/Dashboard/Income';
-import Expense from './pages/Dashboard/Expense';
+import Login from './pages/Auth/View/Login';
+import SignUp from './pages/Auth/View/SignUp';
+import Home from './pages/Dashboard/Home/Home';
+import Income from './pages/Dashboard/Income/Income';
+import Expense from './pages/Dashboard/Expense/Expense';
 import UserProvider from './context/UserContext';
-import EditProfile from './pages/Dashboard/EditProfile';
-import Cards from './pages/Dashboard/Cards';
-import Transactions from './pages/Dashboard/Transactions';
-import Help from './pages/Dashboard/Help';
+import EditProfilePage from './pages/Dashboard/EditProfile/View/EditProfilePage';
+import EditProfile from './pages/Dashboard/EditProfile/EditProfile';
+import Transactions from './pages/Dashboard/Transactions/Transactions';
+import AiAnalyzer from './pages/Dashboard/AiAnalyzer/AiAnalyzer';
 import { Toaster } from'react-hot-toast';
-import AiAnalyzer from './pages/Dashboard/AiAnalyzer';
 
 const App = () => {
   return (
@@ -31,10 +30,9 @@ const App = () => {
             <Route path="/income" element={<Income />} />
             <Route path="/expense" element={<Expense />} />
             <Route path="/profile" element={<EditProfile />} />
+            <Route path="/profile/:username" element={<EditProfilePage />} />
             <Route path="/ai-analyser" element={<AiAnalyzer/>} />
-            <Route path="/cards" element={<Cards />} />
             <Route path="/transactions" element={<Transactions />} />
-            <Route path="/help" element={<Help />} />
           </Routes>
         </Router>
       </div>

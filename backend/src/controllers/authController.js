@@ -141,3 +141,79 @@ exports.getUserInfo = async (req, res) => {
             res.status(500).json({message: "Error getting user info", error: err.message});
       }
 };
+
+// update user profile
+exports.updateUserInfo = async (req, res) => {
+      const fullName = typeof req.body.fullName === 'string' ? req.body.fullName.trim() : '';
+      const currentPassword = typeof req.body.currentPassword === 'string' ? req.body.currentPassword.trim() : '';
+      const newPassword = typeof req.body.newPassword === 'string' ? req.body.newPassword.trim() : '';
+      const profileImageUrl = typeof req.body.profileImageUrl === 'string' ? req.body.profileImageUrl.trim() : undefined;
+
+      if (!fullName) {
+            return res.status(400).json({
+                  message: 'Please fill in all fields',
+            });
+      }
+
+      try {
+            const currentUserResult = await query(
+                  `SELECT id, full_name, email, password, profile_image_url, created_at, updated_at
+                   FROM users
+                   WHERE id = $1
+                   LIMIT 1`,
+                  [req.user.id]
+            );
+
+            if (!currentUserResult.rowCount) {
+                  return res.status(404).json({
+                        message: 'User not found',
+                  });
+            }
+
+            const currentUser = currentUserResult.rows[0];
+            let hashedPassword = currentUser.password;
+
+            if (newPassword) {
+                  if (!currentPassword) {
+                        return res.status(400).json({
+                              message: 'Please enter your current password',
+                        });
+                  }
+
+                  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
+
+                  if (!isCurrentPasswordValid) {
+                        return res.status(400).json({
+                              message: 'Current password is incorrect',
+                        });
+                  }
+
+                  hashedPassword = await bcrypt.hash(newPassword, 10);
+            }
+
+            const nextProfileImageUrl = req.file?.path
+                  ? req.file.path
+                  : profileImageUrl !== undefined
+                        ? profileImageUrl
+                        : currentUser.profile_image_url || '';
+
+            const updatedUserResult = await query(
+                  `UPDATE users
+                   SET full_name = $1,
+                       email = $2,
+                       password = $3,
+                       profile_image_url = $4
+                   WHERE id = $5
+                   RETURNING id, full_name, email, profile_image_url, created_at, updated_at`,
+                  [fullName, currentUser.email, hashedPassword, nextProfileImageUrl, req.user.id]
+            );
+
+            return res.status(200).json({
+                  message: 'Profile updated successfully',
+                  user: toUserResponse(updatedUserResult.rows[0]),
+            });
+      }
+      catch (err) {
+            res.status(500).json({message: 'Error updating user info', error: err.message});
+      }
+};
