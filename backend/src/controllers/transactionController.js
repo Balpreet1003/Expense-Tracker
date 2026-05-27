@@ -1,7 +1,8 @@
 const path = require('path'); 
 const xlsx = require('xlsx');
 const fs = require('fs');
-const { pool, query } = require('../config/db');
+const { pool, query, refreshAnalyticsMaterializedViews } = require('../config/db');
+const { invalidateUserAnalyticsCache } = require('../services/financialAnalyticsService');
 const {
       parseIntegerId,
       parsePositiveAmount,
@@ -84,6 +85,9 @@ exports.addTransaction = async (req, res) => {
                   [userId, resolvedCardId, resolvedCardName, icon, type, category, amount, date, description]
             );
 
+            await refreshAnalyticsMaterializedViews();
+            await invalidateUserAnalyticsCache(userId);
+
             res.status(201).json(toTransactionResponse(result.rows[0]));
       } 
       catch (error) {
@@ -143,6 +147,9 @@ exports.deleteTransaction = async (req, res) => {
             if (!result.rowCount) {
                   return res.status(404).json({ message: "Transaction not found" });
             }
+
+            await refreshAnalyticsMaterializedViews();
+            await invalidateUserAnalyticsCache(req.user.id);
 
             res.status(200).json({ message: "Transaction Deleted" });
       } 

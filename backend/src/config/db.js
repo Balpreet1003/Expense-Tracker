@@ -41,6 +41,8 @@ const schemaSql = `
             WHEN duplicate_object THEN NULL;
       END $$;
 
+      CREATE EXTENSION IF NOT EXISTS vector;
+
       CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             full_name VARCHAR(100) NOT NULL,
@@ -95,6 +97,15 @@ const schemaSql = `
       ALTER TABLE transactions
             ADD COLUMN IF NOT EXISTS cards TEXT DEFAULT '';
 
+      CREATE TABLE IF NOT EXISTS financial_advice_docs (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            category TEXT,
+            content TEXT NOT NULL,
+            embedding VECTOR(1536),
+            created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
       CREATE UNIQUE INDEX IF NOT EXISTS unique_default_card_per_user
             ON cards (user_id)
             WHERE is_default = TRUE;
@@ -104,6 +115,95 @@ const schemaSql = `
       CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions(card_id);
       CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date DESC);
       CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_advice_docs_title
+            ON financial_advice_docs (title);
+
+      DO $$
+      BEGIN
+            IF NOT EXISTS (
+                  SELECT 1
+                  FROM pg_matviews
+                  WHERE schemaname = current_schema()
+                        AND matviewname = 'monthly_financial_summary'
+            ) THEN
+                  CREATE MATERIALIZED VIEW monthly_financial_summary AS
+                  SELECT
+                        user_id,
+                        DATE_TRUNC('month', date) AS month,
+                        SUM(
+                              CASE
+                                    WHEN type = 'income'
+                                    THEN amount
+                                    ELSE 0
+                              END
+                        ) AS total_income,
+                        SUM(
+                              CASE
+                                    WHEN type = 'expense'
+                                    THEN amount
+                                    ELSE 0
+                              END
+                        ) AS total_expense
+                  FROM transactions
+                  GROUP BY
+                        user_id,
+                        DATE_TRUNC('month', date);
+            END IF;
+      END $$;
+
+      DO $$
+      BEGIN
+            IF NOT EXISTS (
+                  SELECT 1
+                  FROM pg_matviews
+                  WHERE schemaname = current_schema()
+                        AND matviewname = 'category_summary'
+            ) THEN
+                  CREATE MATERIALIZED VIEW category_summary AS
+                  SELECT
+                        user_id,
+                        DATE_TRUNC('month', date) AS month,
+                        category,
+                        SUM(amount) AS total_amount
+                  FROM transactions
+                  GROUP BY
+                        user_id,
+                        DATE_TRUNC('month', date),
+                        category;
+            END IF;
+      END $$;
+
+      DO $$
+      BEGIN
+            IF NOT EXISTS (
+                  SELECT 1
+                  FROM pg_matviews
+                  WHERE schemaname = current_schema()
+                        AND matviewname = 'card_spending_summary'
+            ) THEN
+                  CREATE MATERIALIZED VIEW card_spending_summary AS
+                  SELECT
+                        user_id,
+                        card_id,
+                        SUM(amount) AS total_spent
+                  FROM transactions
+                  WHERE type = 'expense'
+                        AND card_id IS NOT NULL
+                  GROUP BY
+                        user_id,
+                        card_id;
+            END IF;
+      END $$;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_monthly_financial_summary_user_month
+            ON monthly_financial_summary (user_id, month);
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_category_summary_user_month_category
+            ON category_summary (user_id, month, category);
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_card_spending_summary_user_card
+            ON card_spending_summary (user_id, card_id);
 
       DO $$
       BEGIN
@@ -151,6 +251,8 @@ const connectDB = async () => {
             console.log('PostgreSQL connection test successful:', result.rows[0]);
 
             await client.query(schemaSql);
+
+            await refreshAnalyticsMaterializedViews();
       }
       catch (error) {
             console.error('PostgreSQL connection error:', error);
@@ -163,8 +265,21 @@ const connectDB = async () => {
       }
 };
 
+const refreshAnalyticsMaterializedViews = async () => {
+      const viewNames = [
+            'monthly_financial_summary',
+            'category_summary',
+            'card_spending_summary',
+      ];
+
+      for (const viewName of viewNames) {
+            await pool.query(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${viewName}`);
+      }
+};
+
 module.exports = {
       pool,
       connectDB,
+      refreshAnalyticsMaterializedViews,
       query: (text, params) => pool.query(text, params),
 };

@@ -1,4 +1,5 @@
-const { pool, query } = require('../config/db');
+const { pool, query, refreshAnalyticsMaterializedViews } = require('../config/db');
+const { invalidateUserAnalyticsCache } = require('../services/financialAnalyticsService');
 const {
     parseBoolean,
     normalizeCardNumber,
@@ -157,6 +158,10 @@ exports.deleteCard = async (req, res) => {
         if (!result.rowCount) {
             return res.status(404).json({ message: "Card not found" });
         }
+
+        await refreshAnalyticsMaterializedViews();
+        await invalidateUserAnalyticsCache(req.user.id);
+
         res.status(200).json({ message: "Card Deleted" });
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
@@ -233,6 +238,7 @@ exports.updateCard = async (req, res) => {
             );
 
             await client.query('COMMIT');
+            await invalidateUserAnalyticsCache(userId);
             res.status(200).json(toCardResponse(updatedCard.rows[0]));
         } catch (error) {
             await client.query('ROLLBACK');

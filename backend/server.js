@@ -3,13 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { connectDB } = require("./src/config/db");
+const { seedFinancialAdviceDocs } = require('./src/services/financialKnowledgeBaseService');
 const authRoutes = require("./src/routes/authRoutes");
 const incomeRoutes = require("./src/routes/incomeRoutes");
 const expenseRoutes = require("./src/routes/expenseRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
 const transactionRoutes = require("./src/routes/transactionRoutes");
 const cardsRoutes = require("./src/routes/cardsRoutes");
-const aiRoutes = require("./src/routes/aiRoutes");
+const aiRoutes = require("./src/routes/ai.routes");
 const { error } = require("console");
 
 const app = express();
@@ -39,8 +40,6 @@ app.use(
 
 app.use(express.json());
 
-connectDB(); 
-
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
@@ -61,4 +60,15 @@ app.get("/", (req, res) => {
  
 const PORT = process.env.PORT || 5000;
 // console.log(`PORT value is: ${PORT}`);
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+
+const startServer = async () => {
+      await connectDB();
+      await seedFinancialAdviceDocs();
+
+      app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+};
+
+startServer().catch((error) => {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+});
