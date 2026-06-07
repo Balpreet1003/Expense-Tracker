@@ -7,3 +7,4 @@ dist/
 build/
 /.vercel/
 backup/
+backend/backup.sql
