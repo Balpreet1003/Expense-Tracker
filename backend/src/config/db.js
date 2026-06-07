@@ -115,6 +115,10 @@ const schemaSql = `
       CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions(card_id);
       CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date DESC);
       CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(user_id, date DESC);
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_type_date ON transactions(user_id, type, date DESC);
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_category ON transactions(user_id, category);
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_card ON transactions(user_id, card_id);
 
       CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_advice_docs_title
             ON financial_advice_docs (title);

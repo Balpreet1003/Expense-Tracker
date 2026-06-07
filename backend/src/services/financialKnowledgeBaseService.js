@@ -5,23 +5,67 @@ const crypto = require('crypto');
 const CACHE_TTL_SECONDS = 60 * 60 * 24;
 
 const EMBEDDING_DIMENSIONS = 1536;
-const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small';
 
 const financialAdviceSeed = [
       {
             title: 'Reducing Food Expenses',
-            category: 'expenses',
-            content: 'Cook at home. Set weekly budgets. Avoid impulse ordering.',
+            category: 'food',
+            content: 'Plan 3–5 repeatable meals, shop with a list, and set a weekly dining-out cap. Batch cook once a week to reduce ordering.',
       },
       {
             title: 'Reducing Shopping Expenses',
-            category: 'expenses',
-            content: 'Follow the 24 hour waiting rule. Avoid emotional purchases.',
+            category: 'shopping',
+            content: 'Use a 24-hour rule for non-essentials, unsubscribe from promo emails, and keep a “wishlist” instead of impulse buys.',
       },
       {
             title: 'Emergency Fund Strategy',
             category: 'savings',
-            content: 'Maintain 6 months of expenses in an emergency fund before increasing discretionary spending.',
+            content: 'Aim for 3–6 months of essential expenses. Automate a fixed transfer on payday and keep the fund in a separate, easy-access account.',
+      },
+      {
+            title: 'Subscription Audit Playbook',
+            category: 'subscriptions',
+            content: 'List all recurring charges, cancel duplicates, and switch annual plans only for services you use weekly. Set a monthly subscriptions budget.',
+      },
+      {
+            title: 'Travel Spending Control',
+            category: 'travel',
+            content: 'Set a per-trip budget, book early for fixed dates, and separate travel savings into a dedicated bucket so travel doesn’t hit monthly essentials.',
+      },
+      {
+            title: 'Entertainment Budgeting',
+            category: 'entertainment',
+            content: 'Create a “fun money” limit and track it weekly. Prefer low-cost activities and bundle outings to reduce small frequent spends.',
+      },
+      {
+            title: 'Utility Bills Optimization',
+            category: 'bills',
+            content: 'Review plans every 3–6 months, pay on time to avoid fees, and set usage reminders. Small recurring overages add up quickly.',
+      },
+      {
+            title: 'Transportation Cost Reduction',
+            category: 'transport',
+            content: 'Combine errands, compare public transit vs ride-hailing, and set a weekly transport cap. Track peak days to target reductions.',
+      },
+      {
+            title: 'Debt Paydown Priorities',
+            category: 'debt',
+            content: 'Pay minimums on all debts, then target the highest-interest balance first. Automate payments and avoid new balances while paying down.',
+      },
+      {
+            title: 'Budgeting Basics (50/30/20)',
+            category: 'budgeting',
+            content: 'Start with a simple allocation: 50% needs, 30% wants, 20% savings/debt. Adjust based on income stability and fixed commitments.',
+      },
+      {
+            title: 'Impulse Spending Safeguards',
+            category: 'behavior',
+            content: 'Remove saved cards from apps, add a small checkout friction (24-hour delay), and set an “impulse budget” to stay intentional.',
+      },
+      {
+            title: 'Building a Savings System',
+            category: 'savings',
+            content: 'Automate savings immediately after income arrives. Use separate buckets for emergency, goals, and long-term savings to avoid mixing funds.',
       },
 ];
 
@@ -71,37 +115,6 @@ const embedText = async (text) => {
 
       if (!normalizedText) {
             return new Array(EMBEDDING_DIMENSIONS).fill(0);
-      }
-
-      const apiKey = process.env.OPENAI_API_KEY;
-
-      if (apiKey) {
-            try {
-                  const response = await fetch('https://api.openai.com/v1/embeddings', {
-                        method: 'POST',
-                        headers: {
-                              'Content-Type': 'application/json',
-                              Authorization: `Bearer ${apiKey}`,
-                        },
-                        body: JSON.stringify({
-                              model: OPENAI_EMBEDDING_MODEL,
-                              input: normalizedText,
-                              encoding_format: 'float',
-                        }),
-                  });
-
-                  if (response.ok) {
-                        const payload = await response.json();
-                        const embedding = payload?.data?.[0]?.embedding;
-
-                        if (Array.isArray(embedding) && embedding.length === EMBEDDING_DIMENSIONS) {
-                              return embedding.map(toNumber);
-                        }
-                  }
-            }
-            catch (error) {
-                  console.error('OpenAI embedding request failed, using local fallback:', error);
-            }
       }
 
       return localEmbedding(normalizedText);

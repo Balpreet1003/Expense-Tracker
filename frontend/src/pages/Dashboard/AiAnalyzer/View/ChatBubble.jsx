@@ -19,7 +19,7 @@ const ChatBubble = ({ role, text, chatAnimationVal }) => {
                 setDisplayedText(text.slice(0, index));
                 index++;
                 if (index > text.length) clearInterval(interval);
-            }, 20);
+            }, 10);
 
             return () => clearInterval(interval);
         }
