@@ -1,6 +1,10 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+if (!process.env.DB_URL) {
+      throw new Error('DB_URL is not configured');
+}
+
 const pool = new Pool({
       connectionString: process.env.DB_URL,
       ssl: {
@@ -15,7 +19,6 @@ pool.on('connect', () => {});
 
 pool.on('error', (err) => {
       console.error('Unexpected error on idle client', err);
-      process.exit(-1);
 });
 
 const schemaSql = `
@@ -154,7 +157,7 @@ const connectDB = async () => {
       }
       catch (error) {
             console.error('PostgreSQL connection error:', error);
-            process.exit(1);
+            throw error;
       }
       finally {
             if (client) {
