@@ -19,17 +19,8 @@ Unlike traditional expense trackers, this application combines structured financ
 
 - [🚀 Live Demo](#-live-demo)
 - [📌 Features](#-features)
-  - [🔐 Authentication](#-authentication)
-  - [💰 Income Management](#-income-management)
-  - [💸 Expense Management](#-expense-management)
-  - [📂 Transaction Management](#-transaction-management)
-  - [📊 Dashboard](#-dashboard)
-  - [📈 Analytics](#-analytics)
-  - [🤖 AI Agent Flow](#-ai-agent-flow)
-  - [👤 User Profile](#-user-profile)
 - [🏗️ Tech Stack](#️-tech-stack)
 - [🏛️ System Architecture](#️-system-architecture)
-- [📂 Project Structure](#-project-structure)
 - [⚙️ Installation](#️-installation)
 - [📡 API Endpoints](#-api-endpoints)
 - [🔒 Security Features](#-security-features)
@@ -50,212 +41,45 @@ https://your-backend-api.vercel.app/
 
 ## 📌 Features
 
-### 🔐 Authentication
+### 🎨 Frontend
 
-- Secure User Registration
-- User Login
-- JWT-based Authentication
+- Secure User Authentication (Login & Registration)
+- Interactive Dashboard with Financial Overview
+- Income & Expense Management
+- Transaction History with Search & Filters
+- Category-wise Expense Tracking
+- Responsive UI built with React and Tailwind CSS
+- Interactive Charts and Financial Visualizations
+- Profile Management with Image Upload
+- Real-time Toast Notifications
+
+---
+
+### ⚙️ Backend
+
+- RESTful APIs built with Express.js
+- JWT-based Authentication & Authorization
 - Password Hashing using bcrypt
-- Protected Routes
-- Persistent Authentication
+- PostgreSQL Database Integration
+- Optimized SQL Queries & Materialized Views
+- Cloudinary Integration for Profile Image Storage
+- Modular MVC Architecture
+- Input Validation & Error Handling
+- Redis Caching for Improved Performance
 
 ---
 
-### 💰 Income Management
-
-- Add Income
-- Edit Income
-- Delete Income
-- Categorize Income
-- Income History
-- Monthly Income Analytics
-
----
-
-### 💸 Expense Management
-
-- Add Expenses
-- Edit Expenses
-- Delete Expenses
-- Expense Categories
-- Monthly Expense Tracking
-- Spending Analysis
-
----
-
-### 📂 Transaction Management
-
-- Complete Transaction History
-- Search Transactions
-- Filter by Category
-- Filter by Date
-- Recent Activity
-
----
-
-### 📊 Dashboard
-
-A centralized dashboard providing a comprehensive overview of the user's financial health.
-
-Includes:
-
-- Current Balance
-- Total Income
-- Total Expenses
-- Monthly Overview
-- Recent Transactions
-- Income vs Expense
-- Category-wise Spending
-- Financial Summary
-
----
-
-### 📈 Analytics
-
-Interactive financial visualizations powered by Recharts.
-
-Available analytics include:
-
-- Monthly Spending Trends
-- Income vs Expense Comparison
-- Category Breakdown
-- Top Spending Categories
-- Financial Overview
-- Spending Distribution
-
----
-
-## 🤖 AI Agent Flow
-
-Instead of sending every user query directly to a Large Language Model (LLM), this project implements a **tool-augmented Retrieval-Augmented Generation (RAG) pipeline** that combines structured financial analytics with semantic knowledge retrieval to generate accurate, personalized financial insights.
-
-### Workflow
-
-#### 1. User Query
-
-The user asks a financial question, such as:
-
-- "Where am I spending the most money?"
-- "How can I reduce my monthly expenses?"
-- "Give me budgeting suggestions."
-
----
-
-#### 2. Intent Detection
-
-The request is received by the AI Controller and forwarded to the AI Agent.
-
-The AI Agent first determines what the user is asking.
-
-- A **rule-based intent router** handles common financial queries for fast and deterministic classification.
-- For ambiguous or complex questions, **Gemini** classifies the intent more accurately.
-
----
-
-#### 3. Tool Planner
-
-Once the intent is identified, the AI Agent does **not** immediately invoke the LLM.
-
-Instead, the request is passed to a **Tool Planner**, which determines the backend analytics required to answer the user's query.
-
----
-
-#### 4. Analytics Execution
-
-The planner executes one or more analytics tools depending on the query.
-
-Examples include:
-
-- Financial Overview
-- Category Analysis
-- Spending Trends
-- Top Transactions
-
-Each tool performs optimized SQL queries or reads from materialized views to retrieve structured financial data.
-
----
-
-#### 5. Semantic Knowledge Retrieval
-
-For queries requiring financial knowledge (such as budgeting strategies or saving advice), the system performs semantic search over a financial knowledge base.
-
-- Financial documents are stored in PostgreSQL.
-- Embeddings are generated and stored using **pgvector**.
-- The user's query is converted into an embedding.
-- A similarity search retrieves the most relevant financial documents.
-
----
-
-#### 6. Response Generation
-
-The AI Agent combines two sources of information:
-
-- User-specific financial analytics from PostgreSQL
-- Financial knowledge retrieved through vector search
-
-This ensures responses are grounded in the user's actual financial data rather than generic AI-generated answers.
-
----
-
-#### 7. Selective LLM Enhancement
-
-The LLM is used selectively for:
-
-- Intent Classification
-- Natural Language Enhancement
-- Response Formatting
-
-Calculations and data retrieval remain database-driven, significantly reducing hallucinations.
-
----
-
-#### 8. Redis Caching
-
-Frequently accessed:
-
-- Knowledge Base Results
-- AI Responses
-
-are cached using Redis to improve response time and reduce unnecessary LLM calls.
-
----
-
-### AI Request Flow
-
-```text
-                     User Query
-                          │
-                          ▼
-                 Intent Detection
-          (Rule-Based Router / Gemini)
-                          │
-                          ▼
-                    Tool Planner
-                          │
-         ┌────────────────┴────────────────┐
-         │                                 │
-         ▼                                 ▼
- Execute Analytics Tools          Vector Search
-(SQL & Materialized Views)    (PostgreSQL + pgvector)
-         │                                 │
-         └────────────────┬────────────────┘
-                          ▼
-      Merge Analytics + Retrieved Knowledge
-                          │
-                          ▼
-          Optional LLM Enhancement
-                          │
-                          ▼
-      Personalized Financial Response
-```
-
----
-
-### 👤 User Profile
-
-- Update Personal Information
-- Upload Profile Picture
-- Cloudinary Image Storage
+### 🤖 AI Agent
+
+- Tool-Augmented Retrieval-Augmented Generation (RAG) Pipeline
+- Rule-Based + LLM-powered Intent Detection
+- Intelligent Tool Planning for Analytics Execution
+- SQL-based Financial Analytics
+- Semantic Search using PostgreSQL + pgvector
+- Personalized Financial Insights based on User Data
+- Financial Knowledge Base Retrieval
+- Redis Caching for AI Responses
+- Grounded Responses with Reduced Hallucinations
 
 ---
 
@@ -342,46 +166,6 @@ are cached using Redis to improve response time and reduce unnecessary LLM calls
 
 ---
 
-## 📂 Project Structure
-
-```text
-Expense-Tracker
-│
-├── frontend
-│   ├── public
-│   ├── src
-│   │   ├── assets
-│   │   ├── components
-│   │   ├── context
-│   │   ├── hooks
-│   │   ├── pages
-│   │   ├── services
-│   │   ├── utils
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   │
-│   └── package.json
-│
-├── backend
-│   ├── src
-│   │   ├── ai
-│   │   ├── analytics
-│   │   ├── config
-│   │   ├── controllers
-│   │   ├── middleware
-│   │   ├── models
-│   │   ├── repositories
-│   │   ├── routes
-│   │   ├── services
-│   │   ├── utils
-│   │   └── server.js
-│   │
-│   └── package.json
-│
-└── README.md
-```
-
----
 
 ## ⚙️ Installation
 
@@ -545,16 +329,12 @@ POST /api/v1/ai/chat
 
 ## 📅 Future Improvements
 
-- Budget Planning
-- Recurring Transactions
 - Savings Goals
 - AI Budget Forecasting
 - OCR Bill Scanner
 - Email Reports
 - PDF Export
-- Excel Export
 - Multi-Currency Support
-- Mobile Application
 - Voice-based Expense Entry
 
 ---
