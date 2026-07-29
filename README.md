@@ -1,4 +1,4 @@
-# 💰 AI-Powered Expense Tracker
+# AI-Powered Expense Tracker
 
 An intelligent full-stack personal finance management application that enables users to efficiently manage their income, expenses, and financial goals while leveraging an AI-powered financial assistant for personalized insights.
 
@@ -15,21 +15,21 @@ Unlike traditional expense trackers, this application combines structured financ
 
 </p>
 
-## 📚 Table of Contents
+## Table of Contents
 
-- [🚀 Live Demo](#-live-demo)
-- [📌 Features](#-features)
-- [🏗️ Tech Stack](#️-tech-stack)
-- [🏛️ System Architecture](#️-system-architecture)
-- [⚙️ Installation](#️-installation)
-- [📡 API Endpoints](#-api-endpoints)
-- [🔒 Security Features](#-security-features)
-- [⚡ Performance Optimizations](#-performance-optimizations)
-- [📅 Future Improvements](#-future-improvements)
-- [🤝 Contributing](#-contributing)
-- [👨‍💻 Author](#-author)
+- [Live Demo](#-live-demo)
+- [Features](#-features)
+- [Tech Stack](#️-tech-stack)
+- [System Architecture](#️-system-architecture)
+- [Installation](#️-installation)
+- [API Endpoints](#-api-endpoints)
+- [Security Features](#-security-features)
+- [Performance Optimizations](#-performance-optimizations)
+- [Future Improvements](#-future-improvements)
+- [Contributing](#-contributing)
+- [Author](#-author)
 
-## 🚀 Live Demo
+## Live Demo
 
 ### Frontend
 https://expense-tracker-wjx8.vercel.app/
@@ -39,9 +39,9 @@ https://your-backend-api.vercel.app/
 
 ---
 
-## 📌 Features
+## Features
 
-### 🎨 Frontend
+### Frontend
 
 - Secure User Authentication (Login & Registration)
 - Interactive Dashboard with Financial Overview
@@ -55,7 +55,7 @@ https://your-backend-api.vercel.app/
 
 ---
 
-### ⚙️ Backend
+### Backend
 
 - RESTful APIs built with Express.js
 - JWT-based Authentication & Authorization
@@ -69,7 +69,7 @@ https://your-backend-api.vercel.app/
 
 ---
 
-### 🤖 AI Agent
+### AI Agent
 
 - Tool-Augmented Retrieval-Augmented Generation (RAG) Pipeline
 - Rule-Based + LLM-powered Intent Detection
@@ -83,57 +83,20 @@ https://your-backend-api.vercel.app/
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
-### Frontend
-
-- React 19
-- Vite
-- Tailwind CSS
-- React Router DOM
-- Axios
-- Recharts
-- React Markdown
-- React Hot Toast
-
+- **Frontend:** React 19, Vite, Tailwind CSS, React Router, Axios, Recharts, React Markdown
+- **Backend:** Node.js, Express.js, REST APIs, JWT Authentication, bcrypt
+- **AI:** Gemini API, Tool-Augmented RAG, pgvector, Prompt Engineering
+- **Database:** PostgreSQL
+- **Caching:** Redis
+- **Cloud Storage:** Cloudinary
+- **Vector Search:** PostgreSQL + pgvector
+- **Data Analytics:** SQL, Materialized Views
+- **Deployment:** Vercel
 ---
 
-### Backend
-
-- Node.js
-- Express.js
-- PostgreSQL
-- Redis
-- JWT
-- bcrypt
-- Multer
-- Cloudinary
-
----
-
-### AI Stack
-
-- Gemini API
-- Tool-Augmented RAG
-- PostgreSQL
-- pgvector
-- Redis
-- Materialized Views
-- Prompt Engineering
-
----
-
-### Deployment
-
-- Frontend → Vercel
-- Backend → Vercel
-- PostgreSQL
-- Redis
-- Cloudinary
-
----
-
-## 🏛️ System Architecture
+## System Architecture
 
 ```text
                         React + Vite
@@ -167,7 +130,7 @@ https://your-backend-api.vercel.app/
 ---
 
 
-## ⚙️ Installation
+## Installation
 
 ### Clone Repository
 
@@ -240,7 +203,7 @@ npm run dev
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Authentication
 
@@ -304,7 +267,7 @@ POST /api/v1/ai/chat
 
 ---
 
-## 🔒 Security Features
+## Security Features
 
 - JWT Authentication
 - Password Hashing using bcrypt
@@ -316,7 +279,7 @@ POST /api/v1/ai/chat
 
 ---
 
-## ⚡ Performance Optimizations
+## Performance Optimizations
 
 - Redis Caching
 - Materialized Views
@@ -327,7 +290,7 @@ POST /api/v1/ai/chat
 
 ---
 
-## 📅 Future Improvements
+## Future Improvements
 
 - Savings Goals
 - AI Budget Forecasting
@@ -339,7 +302,7 @@ POST /api/v1/ai/chat
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
@@ -367,7 +330,7 @@ git push origin feature-name
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Balpreet Singh Gill**
 
