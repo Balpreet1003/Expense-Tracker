@@ -205,66 +205,13 @@ npm run dev
 
 ## API Endpoints
 
-### Authentication
-
-```http
-POST /api/v1/auth/register
-
-POST /api/v1/auth/login
-```
-
----
-
-### Income
-
-```http
-GET    /api/v1/income
-
-POST   /api/v1/income
-
-PUT    /api/v1/income/:id
-
-DELETE /api/v1/income/:id
-```
-
----
-
-### Expense
-
-```http
-GET    /api/v1/expense
-
-POST   /api/v1/expense
-
-PUT    /api/v1/expense/:id
-
-DELETE /api/v1/expense/:id
-```
-
----
-
-### Dashboard
-
-```http
-GET /api/v1/dashboard
-```
-
----
-
-### Transactions
-
-```http
-GET /api/v1/transaction
-```
-
----
-
-### AI Assistant
-
-```http
-POST /api/v1/ai/chat
-```
-
+- **Authentication:** `/api/v1/auth/*`
+- **Dashboard:** `/api/v1/dashboard/*`
+- **Income:** `/api/v1/income/*`
+- **Expense:** `/api/v1/expense/*`
+- **Transactions:** `/api/v1/transaction/*`
+- **Cards:** `/api/v1/cards/*`
+- **AI Agent:** `/api/v1/ai/*`
 ---
 
 ## Security Features
