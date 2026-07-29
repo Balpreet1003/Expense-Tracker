@@ -17,17 +17,17 @@ Unlike traditional expense trackers, this application combines structured financ
 
 ## Table of Contents
 
-- [Live Demo](#-live-demo)
-- [Features](#-features)
-- [Tech Stack](#️-tech-stack)
-- [System Architecture](#️-system-architecture)
-- [Installation](#️-installation)
-- [API Endpoints](#-api-endpoints)
-- [Security Features](#-security-features)
-- [Performance Optimizations](#-performance-optimizations)
-- [Future Improvements](#-future-improvements)
-- [Contributing](#-contributing)
-- [Author](#-author)
+- [Live Demo](#live-demo)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [System Architecture](#system-architecture)
+- [Installation](#installation)
+- [API Endpoints](#api-endpoints)
+- [Security Features](#security-features)
+- [Performance Optimizations](#performance-optimizations)
+- [Future Improvements](#future-improvements)
+- [Contributing](#contributing)
+- [Author](#author)
 
 ## Live Demo
 
