@@ -12,6 +12,7 @@ const pool = new Pool({
       },
       max: 20,
       idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
 });
 
 pool.on('connect', () => {});
@@ -152,7 +153,7 @@ const connectDB = async () => {
             const result = await client.query('SELECT NOW()');
             console.log('PostgreSQL connection test successful:', result.rows[0]);
 
-            // await client.query(schemaSql);
+            await client.query(schemaSql);
       }
       catch (error) {
             console.error('PostgreSQL connection error:', error);
