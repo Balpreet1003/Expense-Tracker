@@ -152,7 +152,7 @@ const connectDB = async () => {
             const result = await client.query('SELECT NOW()');
             console.log('PostgreSQL connection test successful:', result.rows[0]);
 
-            await client.query(schemaSql);
+            // await client.query(schemaSql);
       }
       catch (error) {
             console.error('PostgreSQL connection error:', error);
