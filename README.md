@@ -4,22 +4,12 @@ An intelligent full-stack personal finance management application that enables u
 
 Unlike traditional expense trackers, this application combines structured financial analytics with a **Tool-Augmented Retrieval-Augmented Generation (RAG)** pipeline to generate accurate, data-driven financial recommendations.
 
-<p align="center">
-
-<img src="https://img.shields.io/badge/React-19-blue?logo=react">
-<img src="https://img.shields.io/badge/Node.js-Express-green?logo=node.js">
-<img src="https://img.shields.io/badge/PostgreSQL-Database-blue?logo=postgresql">
-<img src="https://img.shields.io/badge/Redis-Cache-red?logo=redis">
-<img src="https://img.shields.io/badge/Gemini-AI-orange">
-<img src="https://img.shields.io/badge/License-MIT-success">
-
-</p>
+---
 
 ## Table of Contents
 
 - [Live Demo](#live-demo)
 - [Features](#features)
-- [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
 - [Installation](#installation)
 - [API Endpoints](#api-endpoints)
@@ -29,13 +19,15 @@ Unlike traditional expense trackers, this application combines structured financ
 - [Contributing](#contributing)
 - [Author](#author)
 
+---
+
 ## Live Demo
 
 ### Frontend
 https://expense-tracker-wjx8.vercel.app/
 
 ### Backend API
-https://your-backend-api.vercel.app/
+https://expense-tracker-server-eight-umber.vercel.app/
 
 ---
 
@@ -81,19 +73,6 @@ https://your-backend-api.vercel.app/
 - Redis Caching for AI Responses
 - Grounded Responses with Reduced Hallucinations
 
----
-
-## Tech Stack
-
-- **Frontend:** React 19, Vite, Tailwind CSS, React Router, Axios, Recharts, React Markdown
-- **Backend:** Node.js, Express.js, REST APIs, JWT Authentication, bcrypt
-- **AI:** Gemini API, Tool-Augmented RAG, pgvector, Prompt Engineering
-- **Database:** PostgreSQL
-- **Caching:** Redis
-- **Cloud Storage:** Cloudinary
-- **Vector Search:** PostgreSQL + pgvector
-- **Data Analytics:** SQL, Materialized Views
-- **Deployment:** Vercel
 ---
 
 ## System Architecture
