@@ -16,6 +16,7 @@ import EditProfile from './pages/Dashboard/EditProfile/EditProfile';
 import Transactions from './pages/Dashboard/Transactions/Transactions';
 import AiAnalyzer from './pages/Dashboard/AiAnalyzer/AiAnalyzer';
 import { Toaster } from'react-hot-toast';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const App = () => {
   return (
@@ -45,6 +46,7 @@ const App = () => {
           },
         }}
       />
+      <SpeedInsights />
     </UserProvider>
   )
 }
