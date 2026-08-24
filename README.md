@@ -24,7 +24,7 @@ https://expense-tracker-wjx8.vercel.app/
 
 ### Backend API
 
-https://your-backend-api.vercel.app/
+https://expense-tracker-server-eight-umber.vercel.app/
 
 ---
 
