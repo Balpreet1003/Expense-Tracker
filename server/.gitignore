@@ -1,0 +1,8 @@
+.venv
+.env
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+README.md
