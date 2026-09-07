@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.features.expense.schemas.schemas import ExpenseResponse
-from app.features.expense.services.service import get_expense_by_id as get_expense_by_id_service
-
+from app.features.expense.services.expense_service import get_expense_by_id as get_expense_by_id_service
+from app.features.auth.dependencies.auth import get_current_user
+from app.features.auth.models.user import User
 
 router = APIRouter()
 
@@ -14,6 +15,11 @@ router = APIRouter()
 )
 def get_expense_by_id(
     expense_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    return get_expense_by_id_service(expense_id, db)
+    return get_expense_by_id_service(
+        expense_id,
+        db,
+        current_user
+    )

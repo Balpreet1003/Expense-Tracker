@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.database.base import Base
 from app.features.expense.models.expense import Expense
+from app.features.auth.models.user import User
 
 
 # Load environment variables from .env

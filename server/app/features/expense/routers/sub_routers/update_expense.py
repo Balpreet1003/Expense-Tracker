@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.features.expense.schemas.schemas import UpdateExpenseRequest, ExpenseResponse
-from app.features.expense.services.service import update_expense as update_expense_service
+from app.features.expense.services.expense_service import update_expense as update_expense_service
+from app.features.auth.dependencies.auth import get_current_user
+from app.features.auth.models.user import User
 
 router = APIRouter()
 
@@ -15,10 +17,12 @@ router = APIRouter()
 def update_expense(
     expense_id: int,
     expense_data: UpdateExpenseRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     return update_expense_service(
         expense_id,
         expense_data,
-        db
+        db,
+        current_user
     )
