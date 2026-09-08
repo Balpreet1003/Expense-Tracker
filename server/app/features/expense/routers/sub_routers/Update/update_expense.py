@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.features.expense.schemas.schemas import UpdateExpenseRequest, ExpenseResponse
-from app.features.expense.services.expense_service import update_expense as update_expense_service
+from app.features.expense.schemas.UpdateRequest.update_request import UpdateExpenseRequest
+from app.features.expense.schemas.Response.response import ExpenseResponse
+from app.features.expense.services.Update.update_expense_service import update_expense as update_expense_service
 from app.features.auth.dependencies.auth import get_current_user
 from app.features.auth.models.user import User
 
