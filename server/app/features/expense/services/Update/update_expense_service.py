@@ -9,47 +9,55 @@ from app.features.expense.schemas.UpdateRequest.update_request import UpdateExpe
 
 def update_expense(
     expense_id: int,
-    updated_data: UpdateExpenseRequest,
+    expense_update: UpdateExpenseRequest,
     db: Session,
     current_user: User,
 ):
-    try:
-        statement = select(Expense).where(
-            Expense.id == expense_id,
-            Expense.user_id == current_user.id,
+    statement = select(Expense).where(
+        Expense.id == expense_id,
+        Expense.user_id == current_user.id,
+    )
+
+    expense = (
+        db.execute(statement)
+        .scalar_one_or_none()
+    )
+
+    if expense is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Expense with ID {expense_id} not found",
         )
 
-        result = db.execute(statement)
+    update_data = expense_update.model_dump(
+        exclude_unset=True,
+    )
 
-        expense = result.scalar_one_or_none()
-
-        if expense is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Expense with ID {expense_id} not found",
-            )
-
-        update_data = updated_data.model_dump(
-            exclude_unset=True,
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one field is required to update the expense",
         )
 
-        if not update_data:
-            raise HTTPException(
-                status_code=400,
-                detail="At least one field is required to update the expense",
-            )
+    has_changes = False
 
-        for key, value in update_data.items():
+    for key, value in update_data.items():
+        if getattr(expense, key) != value:
             setattr(expense, key, value)
+            has_changes = True
 
+    if not has_changes:
+        raise HTTPException(
+            status_code=400,
+            detail="No changes detected in the expense",
+        )
+    
+    try:
         db.commit()
         db.refresh(expense)
-
-        return expense
-
-    except HTTPException:
-        raise
 
     except Exception:
         db.rollback()
         raise
+
+    return expense

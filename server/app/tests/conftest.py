@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.database.session import get_db
 from app.main import app
-from app.features.expense.models.expense import Expense
 from app.features.auth.models.user import User
+from app.features.income.models.income import Income
+from app.features.expense.models.expense import Expense
 
 
 # Load environment variables from .env
@@ -87,6 +88,7 @@ def db():
 
         # Clean test data after every test
         session.query(Expense).delete()
+        session.query(Income).delete()
         session.query(User).delete()
         session.commit()
 

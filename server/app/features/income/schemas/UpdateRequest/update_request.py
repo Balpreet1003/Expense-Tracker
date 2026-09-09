@@ -1,10 +1,10 @@
 from datetime import date as Date
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-class UpdateExpenseRequest(BaseModel):
+
+class UpdateIncomeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    
+
     amount: float | None = Field(
         default=None,
         gt=0
@@ -12,7 +12,7 @@ class UpdateExpenseRequest(BaseModel):
 
     date: Date | None = None
 
-    category: str | None = Field(
+    source: str | None = Field(
         default=None,
         max_length=100
     )
@@ -46,23 +46,23 @@ class UpdateExpenseRequest(BaseModel):
 
         return value
 
-    @field_validator("category", mode="before")
+    @field_validator("source", mode="before")
     @classmethod
-    def validate_category(cls, value):
+    def validate_source(cls, value):
         if value is None:
-            raise ValueError("Category cannot be null")
+            raise ValueError("Source cannot be null")
 
         if isinstance(value, str):
             value = value.strip()
 
             if not value:
                 raise ValueError(
-                    "Category cannot be empty or whitespace"
+                    "Source cannot be empty or whitespace"
                 )
 
         return value
 
-    @field_validator("description", mode="before")
+    @field_validator("description")
     @classmethod
     def validate_description(cls, value):
         if value is None:

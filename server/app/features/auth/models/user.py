@@ -53,4 +53,11 @@ class User(Base):
     expenses = relationship(
         "Expense",
         back_populates="user",
+        passive_deletes=True
+    )
+
+    incomes = relationship(
+        "Income",
+        back_populates="user",
+        passive_deletes=True
     )

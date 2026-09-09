@@ -1,5 +1,4 @@
 from datetime import date as Date
-
 from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String, PrimaryKeyConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,18 +34,17 @@ class Expense(Base):
         default=""
     )
 
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("users.id"),
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE"
+        ),
         nullable=False,
         index=True,
     )
 
-    __table_args__ = (
-        PrimaryKeyConstraint("id", name="pk_expenses"),
-    )
-
     user = relationship(
-    "User",
-    back_populates="expenses",
-)
+        "User",
+        back_populates="expenses",
+    )

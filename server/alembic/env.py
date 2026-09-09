@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from app.database.base import Base
-from app.features.expense.models.expense import Expense
 from app.features.auth.models.user import User
+from app.features.income.models.income import Income
+from app.features.expense.models.expense import Expense
 
 
 # Load environment variables from .env

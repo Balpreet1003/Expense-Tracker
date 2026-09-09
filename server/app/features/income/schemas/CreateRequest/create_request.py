@@ -1,16 +1,14 @@
 from datetime import date as Date
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
-class CreateExpenseRequest(BaseModel):
+class CreateIncomeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     amount: float = Field(..., gt=0)
 
     date: Date = Field(...)
 
-    category: str = Field(
+    source: str = Field(
         ...,
         max_length=100
     )
@@ -20,13 +18,17 @@ class CreateExpenseRequest(BaseModel):
         max_length=500
     )
 
-    @field_validator("category")
+    @field_validator("source")
     @classmethod
-    def validate_category(cls, value: str) -> str:
-        value = value.strip()
+    def validate_source(cls, value: str) -> str:
+        if value is None:
+            raise ValueError("Source cannot be null")
+
+        if isinstance(value, str):
+            value = value.strip()
 
         if not value:
-            raise ValueError("Category cannot be empty or whitespace")
+            raise ValueError("Source cannot be empty or whitespace")
 
         return value
 

@@ -6,7 +6,7 @@ from app.features.auth.models.user import User
 from app.features.auth.utils.jwt import SECRET_KEY, ALGORITHM
 
 
-EXPENSE_URL = "/api/v1/expense"
+INCOME_URL = "/api/v1/income"
 
 
 # ============================================================
@@ -15,8 +15,8 @@ EXPENSE_URL = "/api/v1/expense"
 
 def create_user_and_get_token(
     client,
-    email="expense-test@example.com",
-    full_name="Expense Test User",
+    email="income-test@example.com",
+    full_name="Income Test User",
     password="password123",
 ):
     response = client.post(
@@ -50,8 +50,8 @@ def auth_user(client):
 def second_auth_user(client):
     return create_user_and_get_token(
         client,
-        email="expense-second@example.com",
-        full_name="Second Expense User",
+        email="income-second@example.com",
+        full_name="Second Income User",
     )
 
 
@@ -69,21 +69,21 @@ def expired_headers(user_id):
 
 
 # ============================================================
-# Expense Helper
+# Income Helper
 # ============================================================
 
-def create_expense(client, auth_user, **overrides):
+def create_income(client, auth_user, **overrides):
     payload = {
         "amount": 100.0,
         "date": "2026-09-01",
-        "category": "Food",
-        "description": "Monthly expense",
+        "source": "Salary",
+        "description": "Monthly income",
     }
 
     payload.update(overrides)
 
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json=payload,
         headers=auth_user["headers"],
     )
@@ -94,19 +94,19 @@ def create_expense(client, auth_user, **overrides):
 
 
 # ============================================================
-# POST /api/v1/expense - Success Cases
+# POST /api/v1/income - Success Cases
 # ============================================================
 
-def test_create_expense_with_all_fields(client, auth_user):
+def test_create_income_with_all_fields(client, auth_user):
     payload = {
         "amount": 50000,
         "date": "2026-09-01",
-        "category": "Food",
-        "description": "Monthly expense",
+        "source": "Salary",
+        "description": "Monthly salary",
     }
 
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json=payload,
         headers=auth_user["headers"],
     )
@@ -119,23 +119,23 @@ def test_create_expense_with_all_fields(client, auth_user):
         "id",
         "amount",
         "date",
-        "category",
+        "source",
         "description",
     }
     assert isinstance(data["id"], int)
     assert data["amount"] == 50000
     assert data["date"] == "2026-09-01"
-    assert data["category"] == "Food"
-    assert data["description"] == "Monthly expense"
+    assert data["source"] == "Salary"
+    assert data["description"] == "Monthly salary"
 
 
-def test_create_expense_without_description(client, auth_user):
+def test_create_income_without_description(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 50000,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -144,13 +144,13 @@ def test_create_expense_without_description(client, auth_user):
     assert response.json()["description"] == ""
 
 
-def test_create_expense_with_empty_description(client, auth_user):
+def test_create_income_with_empty_description(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 50000,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
             "description": "",
         },
         headers=auth_user["headers"],
@@ -160,13 +160,13 @@ def test_create_expense_with_empty_description(client, auth_user):
     assert response.json()["description"] == ""
 
 
-def test_create_expense_with_decimal_amount(client, auth_user):
+def test_create_income_with_decimal_amount(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100.50,
             "date": "2026-09-01",
-            "category": "Travel",
+            "source": "Freelancing",
         },
         headers=auth_user["headers"],
     )
@@ -175,21 +175,21 @@ def test_create_expense_with_decimal_amount(client, auth_user):
     assert response.json()["amount"] == 100.50
 
 
-def test_create_multiple_expenses_for_same_user(client, auth_user):
-    expense_1 = create_expense(client, auth_user, amount=100)
-    expense_2 = create_expense(client, auth_user, amount=200)
-    expense_3 = create_expense(client, auth_user, amount=300)
+def test_create_multiple_incomes_for_same_user(client, auth_user):
+    income_1 = create_income(client, auth_user, amount=100)
+    income_2 = create_income(client, auth_user, amount=200)
+    income_3 = create_income(client, auth_user, amount=300)
 
     ids = {
-        expense_1["id"],
-        expense_2["id"],
-        expense_3["id"],
+        income_1["id"],
+        income_2["id"],
+        income_3["id"],
     }
 
     assert len(ids) == 3
 
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
@@ -205,13 +205,13 @@ def test_create_multiple_expenses_for_same_user(client, auth_user):
     "amount",
     [0, -100, -100.50, None, "abc", "   "],
 )
-def test_create_expense_invalid_amount(client, auth_user, amount):
+def test_create_income_invalid_amount(client, auth_user, amount):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": amount,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -219,12 +219,12 @@ def test_create_expense_invalid_amount(client, auth_user, amount):
     assert response.status_code == 422
 
 
-def test_create_expense_missing_amount(client, auth_user):
+def test_create_income_missing_amount(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -236,13 +236,13 @@ def test_create_expense_missing_amount(client, auth_user):
     "amount",
     [999999999999999, 100.123456789],
 )
-def test_create_expense_large_and_high_precision_amount(client, auth_user, amount):
+def test_create_income_large_and_high_precision_amount(client, auth_user, amount):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": amount,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -254,13 +254,13 @@ def test_create_expense_large_and_high_precision_amount(client, auth_user, amoun
 # POST - Date Validation
 # ============================================================
 
-def test_create_expense_valid_date(client, auth_user):
+def test_create_income_valid_date(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -268,13 +268,13 @@ def test_create_expense_valid_date(client, auth_user):
     assert response.status_code == 201
 
 
-def test_create_expense_date_is_trimmed(client, auth_user):
+def test_create_income_date_is_trimmed(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": " 2026-09-01 ",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -287,13 +287,13 @@ def test_create_expense_date_is_trimmed(client, auth_user):
     "date_value",
     ["01-09-2026", "2026-02-30", "", "     ", None, 12345],
 )
-def test_create_expense_invalid_date(client, auth_user, date_value):
+def test_create_income_invalid_date(client, auth_user, date_value):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": date_value,
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -301,12 +301,12 @@ def test_create_expense_invalid_date(client, auth_user, date_value):
     assert response.status_code == 422
 
 
-def test_create_expense_missing_date(client, auth_user):
+def test_create_income_missing_date(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -315,35 +315,35 @@ def test_create_expense_missing_date(client, auth_user):
 
 
 # ============================================================
-# POST - Category Validation
+# POST - Source Validation
 # ============================================================
 
-def test_create_expense_category_is_trimmed(client, auth_user):
+def test_create_income_source_is_trimmed(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "   Food   ",
+            "source": "   Salary   ",
         },
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 201
-    assert response.json()["category"] == "Food"
+    assert response.json()["source"] == "Salary"
 
 
 @pytest.mark.parametrize(
-    "category",
+    "source",
     ["", "     ", None, 123],
 )
-def test_create_expense_invalid_category(client, auth_user, category):
+def test_create_income_invalid_source(client, auth_user, source):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": category,
+            "source": source,
         },
         headers=auth_user["headers"],
     )
@@ -351,9 +351,9 @@ def test_create_expense_invalid_category(client, auth_user, category):
     assert response.status_code == 422
 
 
-def test_create_expense_missing_category(client, auth_user):
+def test_create_income_missing_source(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
@@ -365,26 +365,26 @@ def test_create_expense_missing_category(client, auth_user):
 
 
 @pytest.mark.parametrize(
-    "category, expected_status",
+    "source, expected_status",
     [
         ("a" * 100, 201),
         ("a" * 101, 422),
         ("सैलरी", 201),
-        ("Travel & Consulting!", 201),
+        ("Freelancing & Consulting!", 201),
     ],
 )
-def test_create_expense_category_boundaries_and_characters(
+def test_create_income_source_boundaries_and_characters(
     client,
     auth_user,
-    category,
+    source,
     expected_status,
 ):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": category,
+            "source": source,
         },
         headers=auth_user["headers"],
     )
@@ -396,29 +396,29 @@ def test_create_expense_category_boundaries_and_characters(
 # POST - Description Validation
 # ============================================================
 
-def test_create_expense_description_is_trimmed(client, auth_user):
+def test_create_income_description_is_trimmed(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
-            "description": "   Monthly Food   ",
+            "source": "Salary",
+            "description": "   Monthly Salary   ",
         },
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 201
-    assert response.json()["description"] == "Monthly Food"
+    assert response.json()["description"] == "Monthly Salary"
 
 
-def test_create_expense_whitespace_description_becomes_empty(client, auth_user):
+def test_create_income_whitespace_description_becomes_empty(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
             "description": "     ",
         },
         headers=auth_user["headers"],
@@ -438,18 +438,18 @@ def test_create_expense_whitespace_description_becomes_empty(client, auth_user):
         ("मासिक आय", 201),
     ],
 )
-def test_create_expense_description_validation(
+def test_create_income_description_validation(
     client,
     auth_user,
     description,
     expected_status,
 ):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
             "description": description,
         },
         headers=auth_user["headers"],
@@ -470,7 +470,7 @@ def test_create_expense_description_validation(
         {"id": 999},
     ],
 )
-def test_create_expense_rejects_extra_fields(
+def test_create_income_rejects_extra_fields(
     client,
     auth_user,
     extra_field,
@@ -478,12 +478,12 @@ def test_create_expense_rejects_extra_fields(
     payload = {
         "amount": 5000,
         "date": "2026-09-01",
-        "category": "Food",
+        "source": "Salary",
     }
     payload.update(extra_field)
 
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json=payload,
         headers=auth_user["headers"],
     )
@@ -495,13 +495,13 @@ def test_create_expense_rejects_extra_fields(
 # Authentication Tests
 # ============================================================
 
-def test_create_expense_without_token(client):
+def test_create_income_without_token(client):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
     )
 
@@ -516,13 +516,13 @@ def test_create_expense_without_token(client):
         {"Authorization": "Token xyz"},
     ],
 )
-def test_create_expense_with_invalid_or_wrong_auth_scheme(client, headers):
+def test_create_income_with_invalid_or_wrong_auth_scheme(client, headers):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=headers,
     )
@@ -530,13 +530,13 @@ def test_create_expense_with_invalid_or_wrong_auth_scheme(client, headers):
     assert response.status_code == 401
 
 
-def test_create_expense_with_expired_token(client, auth_user):
+def test_create_income_with_expired_token(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=expired_headers(auth_user["user"]["id"]),
     )
@@ -556,7 +556,7 @@ def test_token_for_non_existing_user_is_rejected(client):
     )
 
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -564,12 +564,12 @@ def test_token_for_non_existing_user_is_rejected(client):
 
 
 # ============================================================
-# GET /api/v1/expense
+# GET /api/v1/income
 # ============================================================
 
-def test_get_expenses_empty_collection(client, auth_user):
+def test_get_incomes_empty_collection(client, auth_user):
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
@@ -577,81 +577,81 @@ def test_get_expenses_empty_collection(client, auth_user):
     assert response.json() == []
 
 
-def test_get_one_expense(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_get_one_income(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
-    assert response.json()[0]["id"] == expense["id"]
+    assert response.json()[0]["id"] == income["id"]
 
 
-def test_get_multiple_expenses(client, auth_user):
-    expense_1 = create_expense(client, auth_user, amount=100)
-    expense_2 = create_expense(client, auth_user, amount=200)
-
-    response = client.get(
-        EXPENSE_URL,
-        headers=auth_user["headers"],
-    )
-
-    assert response.status_code == 200
-
-    ids = {expense["id"] for expense in response.json()}
-
-    assert ids == {expense_1["id"], expense_2["id"]}
-
-
-def test_get_expenses_response_contract(client, auth_user):
-    create_expense(client, auth_user)
+def test_get_multiple_incomes(client, auth_user):
+    income_1 = create_income(client, auth_user, amount=100)
+    income_2 = create_income(client, auth_user, amount=200)
 
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
 
-    expense = response.json()[0]
+    ids = {income["id"] for income in response.json()}
 
-    assert set(expense.keys()) == {
+    assert ids == {income_1["id"], income_2["id"]}
+
+
+def test_get_incomes_response_contract(client, auth_user):
+    create_income(client, auth_user)
+
+    response = client.get(
+        INCOME_URL,
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+
+    income = response.json()[0]
+
+    assert set(income.keys()) == {
         "id",
         "amount",
         "date",
-        "category",
+        "source",
         "description",
     }
-    assert isinstance(expense["id"], int)
-    assert isinstance(expense["amount"], (int, float))
-    assert isinstance(expense["category"], str)
-    assert isinstance(expense["description"], str)
+    assert isinstance(income["id"], int)
+    assert isinstance(income["amount"], (int, float))
+    assert isinstance(income["source"], str)
+    assert isinstance(income["description"], str)
 
-    assert "user_id" not in expense
-    assert "password" not in expense
-    assert "hashed_password" not in expense
-    assert "token" not in expense
+    assert "user_id" not in income
+    assert "password" not in income
+    assert "hashed_password" not in income
+    assert "token" not in income
 
 
-def test_get_expenses_ordered_by_date_desc_and_id_desc(
+def test_get_incomes_ordered_by_date_desc_and_id_desc(
     client,
     auth_user,
 ):
-    expense_1 = create_expense(
+    income_1 = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
     )
-    expense_2 = create_expense(
+    income_2 = create_income(
         client,
         auth_user,
         amount=200,
         date="2026-09-02",
     )
-    expense_3 = create_expense(
+    income_3 = create_income(
         client,
         auth_user,
         amount=300,
@@ -659,70 +659,70 @@ def test_get_expenses_ordered_by_date_desc_and_id_desc(
     )
 
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
 
-    ids = [expense["id"] for expense in response.json()]
+    ids = [income["id"] for income in response.json()]
 
     assert ids == [
-        expense_3["id"],
-        expense_2["id"],
-        expense_1["id"],
+        income_3["id"],
+        income_2["id"],
+        income_1["id"],
     ]
 
 
 def test_get_all_user_isolation(client, auth_user, second_auth_user):
-    expense_a = create_expense(
+    income_a = create_income(
         client,
         auth_user,
-        category="User A Expense",
+        source="User A Income",
     )
-    expense_b = create_expense(
+    income_b = create_income(
         client,
         second_auth_user,
-        category="User B Expense",
+        source="User B Income",
     )
 
     response_a = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
     response_b = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=second_auth_user["headers"],
     )
 
-    ids_a = {expense["id"] for expense in response_a.json()}
-    ids_b = {expense["id"] for expense in response_b.json()}
+    ids_a = {income["id"] for income in response_a.json()}
+    ids_b = {income["id"] for income in response_b.json()}
 
-    assert expense_a["id"] in ids_a
-    assert expense_b["id"] not in ids_a
+    assert income_a["id"] in ids_a
+    assert income_b["id"] not in ids_a
 
-    assert expense_b["id"] in ids_b
-    assert expense_a["id"] not in ids_b
+    assert income_b["id"] in ids_b
+    assert income_a["id"] not in ids_b
 
 
-def test_get_expenses_without_token(client):
-    response = client.get(EXPENSE_URL)
+def test_get_incomes_without_token(client):
+    response = client.get(INCOME_URL)
 
     assert response.status_code == 401
 
 
-def test_get_expenses_with_invalid_token(client):
+def test_get_incomes_with_invalid_token(client):
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers={"Authorization": "Bearer invalid.token.value"},
     )
 
     assert response.status_code == 401
 
 
-def test_get_expenses_with_expired_token(client, auth_user):
+def test_get_incomes_with_expired_token(client, auth_user):
     response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=expired_headers(auth_user["user"]["id"]),
     )
 
@@ -730,14 +730,14 @@ def test_get_expenses_with_expired_token(client, auth_user):
 
 
 # ============================================================
-# GET /api/v1/expense/{expense_id}
+# GET /api/v1/income/{income_id}
 # ============================================================
 
-def test_get_expense_by_id(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_get_income_by_id(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -745,64 +745,64 @@ def test_get_expense_by_id(client, auth_user):
 
     data = response.json()
 
-    assert data == expense
+    assert data == income
 
 
-def test_get_correct_expense_when_multiple_exist(client, auth_user):
-    expense_1 = create_expense(
+def test_get_correct_income_when_multiple_exist(client, auth_user):
+    income_1 = create_income(
         client,
         auth_user,
-        category="Food",
+        source="Salary",
     )
-    expense_2 = create_expense(
+    income_2 = create_income(
         client,
         auth_user,
-        category="Bonus",
+        source="Bonus",
     )
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense_2['id']}",
+        f"{INCOME_URL}/{income_2['id']}",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
-    assert response.json()["id"] == expense_2["id"]
-    assert response.json()["id"] != expense_1["id"]
+    assert response.json()["id"] == income_2["id"]
+    assert response.json()["id"] != income_1["id"]
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [999999, 999999999],
 )
-def test_get_non_existing_expense(client, auth_user, expense_id):
+def test_get_non_existing_income(client, auth_user, income_id):
     response = client.get(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 404
 
 
-def test_user_cannot_get_another_users_expense(
+def test_user_cannot_get_another_users_income(
     client,
     auth_user,
     second_auth_user,
 ):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=second_auth_user["headers"],
     )
 
     assert response.status_code == 404
 
 
-def test_owner_can_get_own_expense(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_owner_can_get_own_income(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -810,12 +810,12 @@ def test_owner_can_get_own_expense(client, auth_user):
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     ["abc", "1.5"],
 )
-def test_get_expense_invalid_path_id(client, auth_user, expense_id):
+def test_get_income_invalid_path_id(client, auth_user, income_id):
     response = client.get(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -823,47 +823,47 @@ def test_get_expense_invalid_path_id(client, auth_user, expense_id):
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [-1, 0],
 )
-def test_get_expense_zero_and_negative_id_current_behavior(
+def test_get_income_zero_and_negative_id_current_behavior(
     client,
     auth_user,
-    expense_id,
+    income_id,
 ):
     # Current route has no Path(gt=0), so service lookup returns 404.
     response = client.get(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 404
 
 
-def test_get_expense_by_id_without_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_get_income_by_id_without_token(client, auth_user):
+    income = create_income(client, auth_user)
 
-    response = client.get(f"{EXPENSE_URL}/{expense['id']}")
+    response = client.get(f"{INCOME_URL}/{income['id']}")
 
     assert response.status_code == 401
 
 
 # ============================================================
-# PATCH /api/v1/expense/{expense_id} - Success Cases
+# PATCH /api/v1/income/{income_id} - Success Cases
 # ============================================================
 
 def test_patch_amount_only(client, auth_user):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
+        source="Salary",
         description="Monthly",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 500},
         headers=auth_user["headers"],
     )
@@ -874,15 +874,15 @@ def test_patch_amount_only(client, auth_user):
 
     assert data["amount"] == 500
     assert data["date"] == "2026-09-01"
-    assert data["category"] == "Food"
+    assert data["source"] == "Salary"
     assert data["description"] == "Monthly"
 
 
 def test_patch_date_only(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"date": "2026-09-05"},
         headers=auth_user["headers"],
     )
@@ -891,28 +891,28 @@ def test_patch_date_only(client, auth_user):
     assert response.json()["date"] == "2026-09-05"
 
 
-def test_patch_category_only(client, auth_user):
-    expense = create_expense(client, auth_user, category="Food")
+def test_patch_source_only(client, auth_user):
+    income = create_income(client, auth_user, source="Salary")
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
-        json={"category": "Bonus"},
+        f"{INCOME_URL}/{income['id']}",
+        json={"source": "Bonus"},
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
-    assert response.json()["category"] == "Bonus"
+    assert response.json()["source"] == "Bonus"
 
 
 def test_patch_description_only(client, auth_user):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         description="Old description",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"description": "New description"},
         headers=auth_user["headers"],
     )
@@ -922,10 +922,10 @@ def test_patch_description_only(client, auth_user):
 
 
 def test_patch_amount_and_date(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": 500,
             "date": "2026-09-10",
@@ -940,14 +940,14 @@ def test_patch_amount_and_date(client, auth_user):
     assert data["date"] == "2026-09-10"
 
 
-def test_patch_amount_and_category(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_patch_amount_and_source(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": 500,
-            "category": "Travel",
+            "source": "Freelancing",
         },
         headers=auth_user["headers"],
     )
@@ -956,25 +956,25 @@ def test_patch_amount_and_category(client, auth_user):
 
     data = response.json()
     assert data["amount"] == 500
-    assert data["category"] == "Travel"
+    assert data["source"] == "Freelancing"
 
 
 def test_patch_all_fields(client, auth_user):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
+        source="Salary",
         description="Old",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": 500,
             "date": "2026-09-10",
-            "category": "Bonus",
+            "source": "Bonus",
             "description": "New",
         },
         headers=auth_user["headers"],
@@ -984,10 +984,10 @@ def test_patch_all_fields(client, auth_user):
 
     data = response.json()
 
-    assert data["id"] == expense["id"]
+    assert data["id"] == income["id"]
     assert data["amount"] == 500
     assert data["date"] == "2026-09-10"
-    assert data["category"] == "Bonus"
+    assert data["source"] == "Bonus"
     assert data["description"] == "New"
 
 
@@ -995,18 +995,18 @@ def test_patch_partial_update_preserves_unspecified_fields(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
+        source="Salary",
         description="Monthly",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
-        json={"category": "Bonus"},
+        f"{INCOME_URL}/{income['id']}",
+        json={"source": "Bonus"},
         headers=auth_user["headers"],
     )
 
@@ -1016,7 +1016,7 @@ def test_patch_partial_update_preserves_unspecified_fields(
 
     assert data["amount"] == 100
     assert data["date"] == "2026-09-01"
-    assert data["category"] == "Bonus"
+    assert data["source"] == "Bonus"
     assert data["description"] == "Monthly"
 
 
@@ -1025,10 +1025,10 @@ def test_patch_partial_update_preserves_unspecified_fields(
 # ============================================================
 
 def test_patch_empty_body(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={},
         headers=auth_user["headers"],
     )
@@ -1036,15 +1036,15 @@ def test_patch_empty_body(client, auth_user):
     assert response.status_code == 400
     assert (
         response.json()["detail"]
-        == "At least one field is required to update the expense"
+        == "At least one field is required to update the income"
     )
 
 
 def test_patch_missing_body(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -1060,10 +1060,10 @@ def test_patch_missing_body(client, auth_user):
     [0, -100, -10.5, None, "abc", "   "],
 )
 def test_patch_invalid_amount(client, auth_user, amount):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": amount},
         headers=auth_user["headers"],
     )
@@ -1080,10 +1080,10 @@ def test_patch_large_and_high_precision_amount(
     auth_user,
     amount,
 ):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": amount},
         headers=auth_user["headers"],
     )
@@ -1096,10 +1096,10 @@ def test_patch_large_and_high_precision_amount(
 # ============================================================
 
 def test_patch_date_is_trimmed(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"date": " 2026-09-10 "},
         headers=auth_user["headers"],
     )
@@ -1113,10 +1113,10 @@ def test_patch_date_is_trimmed(client, auth_user):
     ["", "   ", "01-09-2026", "2026-02-30", None, 123],
 )
 def test_patch_invalid_date(client, auth_user, date_value):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"date": date_value},
         headers=auth_user["headers"],
     )
@@ -1125,51 +1125,51 @@ def test_patch_invalid_date(client, auth_user, date_value):
 
 
 # ============================================================
-# PATCH - Category Validation
+# PATCH - Source Validation
 # ============================================================
 
-def test_patch_category_is_trimmed(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_patch_source_is_trimmed(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
-        json={"category": "  Bonus  "},
+        f"{INCOME_URL}/{income['id']}",
+        json={"source": "  Bonus  "},
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
-    assert response.json()["category"] == "Bonus"
+    assert response.json()["source"] == "Bonus"
 
 
 @pytest.mark.parametrize(
-    "category",
+    "source",
     ["", "   ", None, 123, "a" * 101],
 )
-def test_patch_invalid_category(client, auth_user, category):
-    expense = create_expense(client, auth_user)
+def test_patch_invalid_source(client, auth_user, source):
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
-        json={"category": category},
+        f"{INCOME_URL}/{income['id']}",
+        json={"source": source},
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 422
 
 
-def test_patch_category_exactly_100_characters(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_patch_source_exactly_100_characters(client, auth_user):
+    income = create_income(client, auth_user)
 
-    category = "a" * 100
+    source = "a" * 100
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
-        json={"category": category},
+        f"{INCOME_URL}/{income['id']}",
+        json={"source": source},
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 200
-    assert response.json()["category"] == category
+    assert response.json()["source"] == source
 
 
 # ============================================================
@@ -1177,14 +1177,14 @@ def test_patch_category_exactly_100_characters(client, auth_user):
 # ============================================================
 
 def test_patch_empty_description(client, auth_user):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         description="Old description",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"description": ""},
         headers=auth_user["headers"],
     )
@@ -1194,14 +1194,14 @@ def test_patch_empty_description(client, auth_user):
 
 
 def test_patch_whitespace_description_is_trimmed(client, auth_user):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         description="Old description",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"description": "   New description   "},
         headers=auth_user["headers"],
     )
@@ -1214,14 +1214,14 @@ def test_patch_whitespace_only_description_becomes_empty(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         description="Old description",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"description": "     "},
         headers=auth_user["headers"],
     )
@@ -1245,10 +1245,10 @@ def test_patch_description_validation(
     description,
     expected_status,
 ):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
         json={"description": description},
     )
@@ -1269,10 +1269,10 @@ def test_patch_description_validation(
     ],
 )
 def test_patch_rejects_extra_fields(client, auth_user, payload):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json=payload,
         headers=auth_user["headers"],
     )
@@ -1289,13 +1289,13 @@ def test_patch_rejects_extra_fields(client, auth_user, payload):
     [
         {"amount": 100},
         {"date": "2026-09-01"},
-        {"category": "Food"},
-        {"description": "Monthly expense"},
+        {"source": "Salary"},
+        {"description": "Monthly income"},
         {
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
-            "description": "Monthly expense",
+            "source": "Salary",
+            "description": "Monthly income",
         },
     ],
 )
@@ -1304,17 +1304,17 @@ def test_patch_no_actual_change_returns_400(
     auth_user,
     payload,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
-        description="Monthly expense",
+        source="Salary",
+        description="Monthly income",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json=payload,
         headers=auth_user["headers"],
     )
@@ -1322,7 +1322,7 @@ def test_patch_no_actual_change_returns_400(
     assert response.status_code == 400
     assert (
         response.json()["detail"]
-        == "No changes detected in the expense"
+        == "No changes detected in the income"
     )
 
 
@@ -1330,18 +1330,18 @@ def test_patch_some_unchanged_and_one_changed_succeeds(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=5000,
-        category="Food",
+        source="Salary",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": 5000,
-            "category": "Bonus",
+            "source": "Bonus",
         },
         headers=auth_user["headers"],
     )
@@ -1350,22 +1350,22 @@ def test_patch_some_unchanged_and_one_changed_succeeds(
 
     data = response.json()
     assert data["amount"] == 5000
-    assert data["category"] == "Bonus"
+    assert data["source"] == "Bonus"
 
 
 def test_patch_whitespace_normalized_same_value_returns_400(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
-        category="Food",
+        source="Salary",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
-        json={"category": " Food "},
+        f"{INCOME_URL}/{income['id']}",
+        json={"source": " Salary "},
         headers=auth_user["headers"],
     )
 
@@ -1373,16 +1373,16 @@ def test_patch_whitespace_normalized_same_value_returns_400(
 
 
 # ============================================================
-# PATCH - Recategory / Authorization / Authentication
+# PATCH - Resource / Authorization / Authentication
 # ============================================================
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [999999, 999999999],
 )
-def test_patch_non_existing_expense(client, auth_user, expense_id):
+def test_patch_non_existing_income(client, auth_user, income_id):
     response = client.patch(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         json={"amount": 500},
         headers=auth_user["headers"],
     )
@@ -1390,22 +1390,22 @@ def test_patch_non_existing_expense(client, auth_user, expense_id):
     assert response.status_code == 404
 
 
-def test_user_cannot_update_another_users_expense(
+def test_user_cannot_update_another_users_income(
     client,
     auth_user,
     second_auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
+        source="Salary",
         description="Monthly",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 999},
         headers=second_auth_user["headers"],
     )
@@ -1413,22 +1413,22 @@ def test_user_cannot_update_another_users_expense(
     assert response.status_code == 404
 
     get_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
     assert get_response.status_code == 200
     assert get_response.json()["amount"] == 100
     assert get_response.json()["date"] == "2026-09-01"
-    assert get_response.json()["category"] == "Food"
+    assert get_response.json()["source"] == "Salary"
     assert get_response.json()["description"] == "Monthly"
 
 
-def test_owner_can_update_own_expense(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_owner_can_update_own_income(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 200},
         headers=auth_user["headers"],
     )
@@ -1438,7 +1438,7 @@ def test_owner_can_update_own_expense(client, auth_user):
 
 def test_patch_invalid_id(client, auth_user):
     response = client.patch(
-        f"{EXPENSE_URL}/abc",
+        f"{INCOME_URL}/abc",
         json={"amount": 200},
         headers=auth_user["headers"],
     )
@@ -1447,10 +1447,10 @@ def test_patch_invalid_id(client, auth_user):
 
 
 def test_patch_without_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 200},
     )
 
@@ -1458,10 +1458,10 @@ def test_patch_without_token(client, auth_user):
 
 
 def test_patch_with_invalid_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 200},
         headers={"Authorization": "Bearer invalid.token.value"},
     )
@@ -1470,10 +1470,10 @@ def test_patch_with_invalid_token(client, auth_user):
 
 
 def test_patch_with_expired_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 200},
         headers=expired_headers(auth_user["user"]["id"]),
     )
@@ -1482,14 +1482,14 @@ def test_patch_with_expired_token(client, auth_user):
 
 
 # ============================================================
-# DELETE /api/v1/expense/{expense_id}
+# DELETE /api/v1/income/{income_id}
 # ============================================================
 
-def test_delete_expense(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_delete_income(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -1497,75 +1497,75 @@ def test_delete_expense(client, auth_user):
     assert response.content == b""
 
 
-def test_delete_expense_verifies_deletion(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_delete_income_verifies_deletion(client, auth_user):
+    income = create_income(client, auth_user)
 
     delete_response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
     assert delete_response.status_code == 204
 
     get_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
     assert get_response.status_code == 404
 
 
-def test_delete_one_expense_does_not_affect_others(client, auth_user):
-    expense_a = create_expense(client, auth_user, category="A")
-    expense_b = create_expense(client, auth_user, category="B")
-    expense_c = create_expense(client, auth_user, category="C")
+def test_delete_one_income_does_not_affect_others(client, auth_user):
+    income_a = create_income(client, auth_user, source="A")
+    income_b = create_income(client, auth_user, source="B")
+    income_c = create_income(client, auth_user, source="C")
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense_b['id']}",
+        f"{INCOME_URL}/{income_b['id']}",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 204
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_a['id']}",
+        f"{INCOME_URL}/{income_a['id']}",
         headers=auth_user["headers"],
     ).status_code == 200
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_b['id']}",
+        f"{INCOME_URL}/{income_b['id']}",
         headers=auth_user["headers"],
     ).status_code == 404
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_c['id']}",
+        f"{INCOME_URL}/{income_c['id']}",
         headers=auth_user["headers"],
     ).status_code == 200
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [999999, 999999999],
 )
-def test_delete_non_existing_expense(client, auth_user, expense_id):
+def test_delete_non_existing_income(client, auth_user, income_id):
     response = client.delete(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 404
 
 
-def test_delete_same_expense_twice(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_delete_same_income_twice(client, auth_user):
+    income = create_income(client, auth_user)
 
     first_response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
     second_response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -1573,33 +1573,33 @@ def test_delete_same_expense_twice(client, auth_user):
     assert second_response.status_code == 404
 
 
-def test_user_cannot_delete_another_users_expense(
+def test_user_cannot_delete_another_users_income(
     client,
     auth_user,
     second_auth_user,
 ):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=second_auth_user["headers"],
     )
 
     assert response.status_code == 404
 
     owner_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
     assert owner_response.status_code == 200
 
 
-def test_owner_can_delete_own_expense(client, auth_user):
-    expense = create_expense(client, auth_user)
+def test_owner_can_delete_own_income(client, auth_user):
+    income = create_income(client, auth_user)
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -1607,12 +1607,12 @@ def test_owner_can_delete_own_expense(client, auth_user):
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     ["abc", "1.5"],
 )
-def test_delete_invalid_path_id(client, auth_user, expense_id):
+def test_delete_invalid_path_id(client, auth_user, income_id):
     response = client.delete(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -1620,16 +1620,16 @@ def test_delete_invalid_path_id(client, auth_user, expense_id):
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [-1, 0],
 )
 def test_delete_zero_and_negative_id_current_behavior(
     client,
     auth_user,
-    expense_id,
+    income_id,
 ):
     response = client.delete(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -1637,20 +1637,20 @@ def test_delete_zero_and_negative_id_current_behavior(
 
 
 def test_delete_without_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
     )
 
     assert response.status_code == 401
 
 
 def test_delete_with_invalid_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers={"Authorization": "Bearer invalid.token.value"},
     )
 
@@ -1658,10 +1658,10 @@ def test_delete_with_invalid_token(client, auth_user):
 
 
 def test_delete_with_expired_token(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=expired_headers(auth_user["user"]["id"]),
     )
 
@@ -1672,13 +1672,13 @@ def test_delete_with_expired_token(client, auth_user):
 # Database Integrity / Regression
 # ============================================================
 
-def test_invalid_create_does_not_create_expense(client, auth_user):
+def test_invalid_create_does_not_create_income(client, auth_user):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": -100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
         },
         headers=auth_user["headers"],
     )
@@ -1686,7 +1686,7 @@ def test_invalid_create_does_not_create_expense(client, auth_user):
     assert response.status_code == 422
 
     get_response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
@@ -1694,18 +1694,18 @@ def test_invalid_create_does_not_create_expense(client, auth_user):
     assert get_response.json() == []
 
 
-def test_invalid_patch_does_not_modify_expense(client, auth_user):
-    expense = create_expense(
+def test_invalid_patch_does_not_modify_income(client, auth_user):
+    income = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
+        source="Salary",
         description="Monthly",
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": -500},
         headers=auth_user["headers"],
     )
@@ -1713,7 +1713,7 @@ def test_invalid_patch_does_not_modify_expense(client, auth_user):
     assert response.status_code == 422
 
     get_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -1721,82 +1721,82 @@ def test_invalid_patch_does_not_modify_expense(client, auth_user):
 
     assert data["amount"] == 100
     assert data["date"] == "2026-09-01"
-    assert data["category"] == "Food"
+    assert data["source"] == "Salary"
     assert data["description"] == "Monthly"
 
 
-def test_failed_delete_does_not_delete_other_expenses(
+def test_failed_delete_does_not_delete_other_incomes(
     client,
     auth_user,
 ):
-    expense_1 = create_expense(client, auth_user, category="Expense 1")
-    expense_2 = create_expense(client, auth_user, category="Expense 2")
+    income_1 = create_income(client, auth_user, source="Income 1")
+    income_2 = create_income(client, auth_user, source="Income 2")
 
     response = client.delete(
-        f"{EXPENSE_URL}/999999",
+        f"{INCOME_URL}/999999",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 404
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_1['id']}",
+        f"{INCOME_URL}/{income_1['id']}",
         headers=auth_user["headers"],
     ).status_code == 200
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_2['id']}",
+        f"{INCOME_URL}/{income_2['id']}",
         headers=auth_user["headers"],
     ).status_code == 200
 
 
-def test_updating_one_expense_does_not_modify_another(
+def test_updating_one_income_does_not_modify_another(
     client,
     auth_user,
 ):
-    expense_1 = create_expense(
+    income_1 = create_income(
         client,
         auth_user,
         amount=100,
-        category="Food",
+        source="Salary",
     )
-    expense_2 = create_expense(
+    income_2 = create_income(
         client,
         auth_user,
         amount=200,
-        category="Bonus",
+        source="Bonus",
     )
 
     update_response = client.patch(
-        f"{EXPENSE_URL}/{expense_1['id']}",
+        f"{INCOME_URL}/{income_1['id']}",
         json={"amount": 999},
         headers=auth_user["headers"],
     )
 
     assert update_response.status_code == 200
 
-    get_expense_2 = client.get(
-        f"{EXPENSE_URL}/{expense_2['id']}",
+    get_income_2 = client.get(
+        f"{INCOME_URL}/{income_2['id']}",
         headers=auth_user["headers"],
     )
 
-    assert get_expense_2.status_code == 200
-    assert get_expense_2.json()["amount"] == 200
-    assert get_expense_2.json()["category"] == "Bonus"
+    assert get_income_2.status_code == 200
+    assert get_income_2.json()["amount"] == 200
+    assert get_income_2.json()["source"] == "Bonus"
 
 
 # ============================================================
 # Full CRUD Lifecycle
 # ============================================================
 
-def test_complete_expense_crud_lifecycle(client, auth_user):
+def test_complete_income_crud_lifecycle(client, auth_user):
     # CREATE
     create_response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 100,
             "date": "2026-09-01",
-            "category": "Food",
+            "source": "Salary",
             "description": "Initial",
         },
         headers=auth_user["headers"],
@@ -1804,12 +1804,12 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
 
     assert create_response.status_code == 201
 
-    expense = create_response.json()
-    expense_id = expense["id"]
+    income = create_response.json()
+    income_id = income["id"]
 
     # GET BY ID
     get_response = client.get(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -1818,19 +1818,19 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
 
     # GET ALL
     get_all_response = client.get(
-        EXPENSE_URL,
+        INCOME_URL,
         headers=auth_user["headers"],
     )
 
     assert get_all_response.status_code == 200
-    assert expense_id in {
+    assert income_id in {
         item["id"]
         for item in get_all_response.json()
     }
 
     # UPDATE
     update_response = client.patch(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         json={
             "amount": 500,
             "description": "Updated",
@@ -1844,7 +1844,7 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
 
     # GET UPDATED
     get_updated_response = client.get(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -1853,7 +1853,7 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
 
     # DELETE
     delete_response = client.delete(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -1861,7 +1861,7 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
 
     # FINAL GET
     final_get_response = client.get(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         headers=auth_user["headers"],
     )
 
@@ -1872,76 +1872,76 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
 # Multi-User Integration
 # ============================================================
 
-def test_complete_multi_user_expense_isolation(
+def test_complete_multi_user_income_isolation(
     client,
     auth_user,
     second_auth_user,
 ):
-    expense_a1 = create_expense(
+    income_a1 = create_income(
         client,
         auth_user,
-        category="A1",
+        source="A1",
     )
-    expense_a2 = create_expense(
+    income_a2 = create_income(
         client,
         auth_user,
-        category="A2",
+        source="A2",
     )
 
-    expense_b1 = create_expense(
+    income_b1 = create_income(
         client,
         second_auth_user,
-        category="B1",
+        source="B1",
     )
-    expense_b2 = create_expense(
+    income_b2 = create_income(
         client,
         second_auth_user,
-        category="B2",
+        source="B2",
     )
 
     # Owners can access their own records.
     assert client.get(
-        f"{EXPENSE_URL}/{expense_a1['id']}",
+        f"{INCOME_URL}/{income_a1['id']}",
         headers=auth_user["headers"],
     ).status_code == 200
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_b1['id']}",
+        f"{INCOME_URL}/{income_b1['id']}",
         headers=second_auth_user["headers"],
     ).status_code == 200
 
     # Cross-user GET is blocked.
     assert client.get(
-        f"{EXPENSE_URL}/{expense_b1['id']}",
+        f"{INCOME_URL}/{income_b1['id']}",
         headers=auth_user["headers"],
     ).status_code == 404
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_a1['id']}",
+        f"{INCOME_URL}/{income_a1['id']}",
         headers=second_auth_user["headers"],
     ).status_code == 404
 
     # Cross-user UPDATE is blocked.
     assert client.patch(
-        f"{EXPENSE_URL}/{expense_b1['id']}",
+        f"{INCOME_URL}/{income_b1['id']}",
         json={"amount": 999},
         headers=auth_user["headers"],
     ).status_code == 404
 
     # Cross-user DELETE is blocked.
     assert client.delete(
-        f"{EXPENSE_URL}/{expense_a2['id']}",
+        f"{INCOME_URL}/{income_a2['id']}",
         headers=second_auth_user["headers"],
     ).status_code == 404
 
     # Verify records remain accessible to owners.
     assert client.get(
-        f"{EXPENSE_URL}/{expense_a2['id']}",
+        f"{INCOME_URL}/{income_a2['id']}",
         headers=auth_user["headers"],
     ).status_code == 200
 
     assert client.get(
-        f"{EXPENSE_URL}/{expense_b2['id']}",
+        f"{INCOME_URL}/{income_b2['id']}",
         headers=second_auth_user["headers"],
     ).status_code == 200
 
@@ -1954,8 +1954,8 @@ def test_multiple_sequential_creates_have_unique_ids(
     client,
     auth_user,
 ):
-    expenses = [
-        create_expense(
+    incomes = [
+        create_income(
             client,
             auth_user,
             amount=100 + index,
@@ -1963,13 +1963,13 @@ def test_multiple_sequential_creates_have_unique_ids(
         for index in range(5)
     ]
 
-    ids = [expense["id"] for expense in expenses]
+    ids = [income["id"] for income in incomes]
 
     assert len(ids) == len(set(ids))
 
 
-def test_update_expense_multiple_times(client, auth_user):
-    expense = create_expense(
+def test_update_income_multiple_times(client, auth_user):
+    income = create_income(
         client,
         auth_user,
         amount=100,
@@ -1977,7 +1977,7 @@ def test_update_expense_multiple_times(client, auth_user):
 
     for amount in [200, 300]:
         response = client.patch(
-            f"{EXPENSE_URL}/{expense['id']}",
+            f"{INCOME_URL}/{income['id']}",
             json={"amount": amount},
             headers=auth_user["headers"],
         )
@@ -1985,7 +1985,7 @@ def test_update_expense_multiple_times(client, auth_user):
         assert response.status_code == 200
 
     final_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -1994,10 +1994,10 @@ def test_update_expense_multiple_times(client, auth_user):
 
 
 def test_delete_after_update(client, auth_user):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     update_response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 500},
         headers=auth_user["headers"],
     )
@@ -2005,7 +2005,7 @@ def test_delete_after_update(client, auth_user):
     assert update_response.status_code == 200
 
     delete_response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -2013,14 +2013,14 @@ def test_delete_after_update(client, auth_user):
 
 
 def test_valid_update_after_failed_update(client, auth_user):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
     )
 
     invalid_response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": -100},
         headers=auth_user["headers"],
     )
@@ -2028,7 +2028,7 @@ def test_valid_update_after_failed_update(client, auth_user):
     assert invalid_response.status_code == 422
 
     valid_response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={"amount": 200},
         headers=auth_user["headers"],
     )
@@ -2038,61 +2038,61 @@ def test_valid_update_after_failed_update(client, auth_user):
 
 
 def test_same_date_records_remain_independent(client, auth_user):
-    expense_1 = create_expense(
+    income_1 = create_income(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
-        category="Food",
+        source="Salary",
     )
-    expense_2 = create_expense(
+    income_2 = create_income(
         client,
         auth_user,
         amount=200,
         date="2026-09-01",
-        category="Bonus",
+        source="Bonus",
     )
 
     update_response = client.patch(
-        f"{EXPENSE_URL}/{expense_1['id']}",
+        f"{INCOME_URL}/{income_1['id']}",
         json={"amount": 999},
         headers=auth_user["headers"],
     )
 
     assert update_response.status_code == 200
 
-    expense_2_response = client.get(
-        f"{EXPENSE_URL}/{expense_2['id']}",
+    income_2_response = client.get(
+        f"{INCOME_URL}/{income_2['id']}",
         headers=auth_user["headers"],
     )
 
-    assert expense_2_response.status_code == 200
-    assert expense_2_response.json()["amount"] == 200
+    assert income_2_response.status_code == 200
+    assert income_2_response.json()["amount"] == 200
 
 
-def test_same_category_records_remain_independent(client, auth_user):
-    expense_1 = create_expense(
+def test_same_source_records_remain_independent(client, auth_user):
+    income_1 = create_income(
         client,
         auth_user,
         amount=100,
-        category="Food",
+        source="Salary",
     )
-    expense_2 = create_expense(
+    income_2 = create_income(
         client,
         auth_user,
         amount=200,
-        category="Food",
+        source="Salary",
     )
 
     delete_response = client.delete(
-        f"{EXPENSE_URL}/{expense_1['id']}",
+        f"{INCOME_URL}/{income_1['id']}",
         headers=auth_user["headers"],
     )
 
     assert delete_response.status_code == 204
 
     remaining_response = client.get(
-        f"{EXPENSE_URL}/{expense_2['id']}",
+        f"{INCOME_URL}/{income_2['id']}",
         headers=auth_user["headers"],
     )
 
@@ -2105,14 +2105,14 @@ def test_same_category_records_remain_independent(client, auth_user):
 # ============================================================
 
 
-def test_get_expense_by_id_with_invalid_token(
+def test_get_income_by_id_with_invalid_token(
     client,
     auth_user,
 ):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers={
             "Authorization": "Bearer invalid.token.value",
         },
@@ -2121,14 +2121,14 @@ def test_get_expense_by_id_with_invalid_token(
     assert response.status_code == 401
 
 
-def test_get_expense_by_id_with_expired_token(
+def test_get_income_by_id_with_expired_token(
     client,
     auth_user,
 ):
-    expense = create_expense(client, auth_user)
+    income = create_income(client, auth_user)
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=expired_headers(
             auth_user["user"]["id"]
         ),
@@ -2142,17 +2142,17 @@ def test_get_expense_by_id_with_expired_token(
 # ============================================================
 
 
-def test_get_expense_by_id_response_contract(
+def test_get_income_by_id_response_contract(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
     )
 
     response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
@@ -2164,14 +2164,14 @@ def test_get_expense_by_id_response_contract(
         "id",
         "amount",
         "date",
-        "category",
+        "source",
         "description",
     }
 
     assert isinstance(data["id"], int)
     assert isinstance(data["amount"], (int, float))
     assert isinstance(data["date"], str)
-    assert isinstance(data["category"], str)
+    assert isinstance(data["source"], str)
     assert isinstance(data["description"], str)
 
     assert "user_id" not in data
@@ -2186,7 +2186,7 @@ def test_get_expense_by_id_response_contract(
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [
         "abc",
         "1.5",
@@ -2195,10 +2195,10 @@ def test_get_expense_by_id_response_contract(
 def test_patch_invalid_id(
     client,
     auth_user,
-    expense_id,
+    income_id,
 ):
     response = client.patch(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         json={
             "amount": 200,
         },
@@ -2209,7 +2209,7 @@ def test_patch_invalid_id(
 
 
 @pytest.mark.parametrize(
-    "expense_id",
+    "income_id",
     [
         -1,
         0,
@@ -2218,10 +2218,10 @@ def test_patch_invalid_id(
 def test_patch_zero_and_negative_id_current_behavior(
     client,
     auth_user,
-    expense_id,
+    income_id,
 ):
     response = client.patch(
-        f"{EXPENSE_URL}/{expense_id}",
+        f"{INCOME_URL}/{income_id}",
         json={
             "amount": 500,
         },
@@ -2236,18 +2236,18 @@ def test_patch_zero_and_negative_id_current_behavior(
 # ============================================================
 
 
-def test_patch_expense_response_contract(
+def test_patch_income_response_contract(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
     )
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": 500,
         },
@@ -2262,14 +2262,14 @@ def test_patch_expense_response_contract(
         "id",
         "amount",
         "date",
-        "category",
+        "source",
         "description",
     }
 
     assert isinstance(data["id"], int)
     assert isinstance(data["amount"], (int, float))
     assert isinstance(data["date"], str)
-    assert isinstance(data["category"], str)
+    assert isinstance(data["source"], str)
     assert isinstance(data["description"], str)
 
     assert data["amount"] == 500
@@ -2299,18 +2299,18 @@ def test_patch_expense_response_contract(
         },
     ],
 )
-def test_delete_expense_invalid_authentication(
+def test_delete_income_invalid_authentication(
     client,
     auth_user,
     headers,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
     )
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=headers,
     )
 
@@ -2322,17 +2322,17 @@ def test_delete_expense_invalid_authentication(
 # ============================================================
 
 
-def test_create_expense_with_very_large_amount(
+def test_create_income_with_very_large_amount(
     client,
     auth_user,
 ):
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": 999999999999999,
             "date": "2026-09-01",
-            "category": "Food",
-            "description": "Very large expense",
+            "source": "Salary",
+            "description": "Very large income",
         },
         headers=auth_user["headers"],
     )
@@ -2344,18 +2344,18 @@ def test_create_expense_with_very_large_amount(
     assert data["amount"] == 999999999999999
 
 
-def test_create_expense_with_high_precision_amount(
+def test_create_income_with_high_precision_amount(
     client,
     auth_user,
 ):
     amount = 100.123456789
 
     response = client.post(
-        EXPENSE_URL,
+        INCOME_URL,
         json={
             "amount": amount,
             "date": "2026-09-01",
-            "category": "Travel",
+            "source": "Freelancing",
             "description": "High precision amount",
         },
         headers=auth_user["headers"],
@@ -2373,11 +2373,11 @@ def test_create_expense_with_high_precision_amount(
 # ============================================================
 
 
-def test_patch_expense_with_very_large_amount(
+def test_patch_income_with_very_large_amount(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
@@ -2386,7 +2386,7 @@ def test_patch_expense_with_very_large_amount(
     large_amount = 999999999999999
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": large_amount,
         },
@@ -2400,11 +2400,11 @@ def test_patch_expense_with_very_large_amount(
     assert data["amount"] == large_amount
 
 
-def test_patch_expense_with_high_precision_amount(
+def test_patch_income_with_high_precision_amount(
     client,
     auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         auth_user,
         amount=100,
@@ -2413,7 +2413,7 @@ def test_patch_expense_with_high_precision_amount(
     amount = 100.123456789
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": amount,
         },
@@ -2432,33 +2432,33 @@ def test_patch_expense_with_high_precision_amount(
 # ============================================================
 
 
-def test_user_cannot_update_another_users_expense_and_data_remains_unchanged(
+def test_user_cannot_update_another_users_income_and_data_remains_unchanged(
     client,
     auth_user,
     second_auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         second_auth_user,
         amount=500,
-        category="Second User Food",
+        source="Second User Salary",
         description="Original description",
     )
 
-    expense_before_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+    income_before_response = client.get(
+        f"{INCOME_URL}/{income['id']}",
         headers=second_auth_user["headers"],
     )
 
-    assert expense_before_response.status_code == 200
+    assert income_before_response.status_code == 200
 
-    expense_before = expense_before_response.json()
+    income_before = income_before_response.json()
 
     response = client.patch(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         json={
             "amount": 999,
-            "category": "Hacked Category",
+            "source": "Hacked Source",
             "description": "Hacked Description",
         },
         headers=auth_user["headers"],
@@ -2466,20 +2466,20 @@ def test_user_cannot_update_another_users_expense_and_data_remains_unchanged(
 
     assert response.status_code == 404
 
-    expense_after_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+    income_after_response = client.get(
+        f"{INCOME_URL}/{income['id']}",
         headers=second_auth_user["headers"],
     )
 
-    assert expense_after_response.status_code == 200
+    assert income_after_response.status_code == 200
 
-    expense_after = expense_after_response.json()
+    income_after = income_after_response.json()
 
-    assert expense_after["id"] == expense_before["id"]
-    assert expense_after["amount"] == expense_before["amount"]
-    assert expense_after["date"] == expense_before["date"]
-    assert expense_after["category"] == expense_before["category"]
-    assert expense_after["description"] == expense_before["description"]
+    assert income_after["id"] == income_before["id"]
+    assert income_after["amount"] == income_before["amount"]
+    assert income_after["date"] == income_before["date"]
+    assert income_after["source"] == income_before["source"]
+    assert income_after["description"] == income_before["description"]
 
 
 # ============================================================
@@ -2487,27 +2487,27 @@ def test_user_cannot_update_another_users_expense_and_data_remains_unchanged(
 # ============================================================
 
 
-def test_user_cannot_delete_another_users_expense_and_record_remains(
+def test_user_cannot_delete_another_users_income_and_record_remains(
     client,
     auth_user,
     second_auth_user,
 ):
-    expense = create_expense(
+    income = create_income(
         client,
         second_auth_user,
         amount=500,
-        category="Second User Food",
+        source="Second User Salary",
     )
 
     response = client.delete(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=auth_user["headers"],
     )
 
     assert response.status_code == 404
 
     owner_response = client.get(
-        f"{EXPENSE_URL}/{expense['id']}",
+        f"{INCOME_URL}/{income['id']}",
         headers=second_auth_user["headers"],
     )
 
@@ -2515,6 +2515,6 @@ def test_user_cannot_delete_another_users_expense_and_record_remains(
 
     data = owner_response.json()
 
-    assert data["id"] == expense["id"]
-    assert data["amount"] == expense["amount"]
-    assert data["category"] == expense["category"]
+    assert data["id"] == income["id"]
+    assert data["amount"] == income["amount"]
+    assert data["source"] == income["source"]
