@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -25,7 +25,7 @@ def update_income(
 
     if income is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Income with ID {income_id} not found",
         )
 
@@ -35,7 +35,7 @@ def update_income(
 
     if not update_data:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one field is required to update the income",
         )
 
@@ -48,7 +48,7 @@ def update_income(
 
     if not has_changes:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="No changes detected in the income",
         )
 

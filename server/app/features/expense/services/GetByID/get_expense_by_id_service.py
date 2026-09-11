@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.features.auth.models.user import User
@@ -22,7 +22,7 @@ def get_expense_by_id(
 
     if expense is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Expense with ID {expense_id} not found",
         )
 

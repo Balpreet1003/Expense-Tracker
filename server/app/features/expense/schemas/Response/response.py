@@ -1,14 +1,4 @@
-from datetime import date as Date
+from app.shared.schemas.Response.response_base import ResponseBase
 
-from pydantic import BaseModel
-
-class ExpenseResponse(BaseModel):
-    id: int
-    amount: float
-    date: Date
+class ExpenseResponse(ResponseBase):
     category: str
-    description: str
-
-    model_config = {
-        "from_attributes": True
-    }

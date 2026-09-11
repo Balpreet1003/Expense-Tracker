@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from app.features.auth.models.user import User
 from app.features.income.models.income import Income
@@ -21,7 +21,7 @@ def get_income_by_id(
 
     if income is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Income with ID {income_id} not found",
         )
 

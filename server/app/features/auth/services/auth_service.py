@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.features.auth.models.user import User
@@ -28,7 +28,7 @@ def register_user(
 
     if existing_user:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="User already exists",
         )
 
@@ -76,7 +76,7 @@ def login_user(
 
     if not user:
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
@@ -87,7 +87,7 @@ def login_user(
 
     if not is_password_valid:
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 

@@ -1,13 +1,4 @@
-from datetime import date as Date
-from pydantic import BaseModel
+from app.shared.schemas.Response.response_base import ResponseBase
 
-class IncomeResponse(BaseModel):
-    id: int
-    amount: float
-    date: Date
-    source: str
-    description: str
-
-    model_config = {
-        "from_attributes": True
-    }
+class IncomeResponse(ResponseBase):
+    source: str 

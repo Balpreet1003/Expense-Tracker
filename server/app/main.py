@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from app.features.auth.routes.router import router as auth_router
 from app.features.income.routers.router import router as income_router
 from app.features.expense.routers.router import router as expense_router
+from app.features.transactions.routers.router import router as transaction_router
 
 app = FastAPI()
 
@@ -28,4 +29,10 @@ app.include_router(
     income_router,
     prefix="/api/v1",
     tags=["Incomes"]
+)
+
+app.include_router(
+    transaction_router,
+    prefix="/api/v1",
+    tags=["Transactions"]
 )
