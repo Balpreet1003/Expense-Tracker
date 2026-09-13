@@ -1,15 +1,23 @@
 from datetime import date as Date
-
+from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+MAX_EXPENSE_AMOUNT = Decimal("9999999999.99")
 
 class UpdateRequestBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    amount: float | None = Field(
+    icon: str | None = Field(
         default=None,
-        gt=0,
-        strict=True,
+        max_length=100,
+    )
+
+    amount: Decimal | None = Field(
+        default=None,
+        decimal_places=2,
+        gt=Decimal("0"),
+        le=MAX_EXPENSE_AMOUNT,
+        max_digits=12,
     )
 
     date: Date | None = Field(
@@ -55,5 +63,15 @@ class UpdateRequestBase(BaseModel):
 
         if isinstance(value, str):
             value = value.strip()
+
+        return value
+
+    @field_validator("icon", mode="before")
+    @classmethod
+    def validate_icon(cls, value):
+        if value is None:
+            raise ValueError(
+                "Icon cannot be null"
+            )
 
         return value

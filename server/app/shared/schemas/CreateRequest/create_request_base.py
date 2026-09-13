@@ -1,13 +1,24 @@
 from datetime import date as Date
+from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+MAX_EXPENSE_AMOUNT = Decimal("9999999999.99")
 
 class CreateRequestBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    amount: float = Field(
+    icon: str = Field(
+        max_length=100, 
+        default="",
+    )
+
+    amount: Decimal = Field(
         ...,
-        gt=0,
-        strict=True,
+        gt=Decimal("0"),
+        le=MAX_EXPENSE_AMOUNT,
+        max_digits=12,
+        decimal_places=2,
+
     )
 
     date: Date = Field(...)

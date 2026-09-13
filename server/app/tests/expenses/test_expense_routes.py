@@ -1,5 +1,7 @@
 import pytest
 import jwt
+import time
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timedelta, timezone
 
 from app.features.auth.models.user import User
@@ -74,6 +76,7 @@ def expired_headers(user_id):
 
 def create_expense(client, auth_user, **overrides):
     payload = {
+        "icon": "",
         "amount": 100.0,
         "date": "2026-09-01",
         "category": "Food",
@@ -117,16 +120,23 @@ def test_create_expense_with_all_fields(client, auth_user):
 
     assert set(data.keys()) == {
         "id",
+        "icon",
         "amount",
         "date",
         "category",
         "description",
+        "created_at",
+        "updated_at",
     }
     assert isinstance(data["id"], int)
-    assert data["amount"] == 50000
+    assert isinstance(data["icon"], str)
+    assert data["icon"] == ""
+    assert Decimal(data["amount"]) == Decimal(50000)
     assert data["date"] == "2026-09-01"
     assert data["category"] == "Food"
     assert data["description"] == "Monthly expense"
+    assert isinstance(data["created_at"], str)
+    assert isinstance(data["updated_at"], str)
 
 
 def test_create_expense_without_description(client, auth_user):
@@ -172,7 +182,7 @@ def test_create_expense_with_decimal_amount(client, auth_user):
     )
 
     assert response.status_code == 201
-    assert response.json()["amount"] == 100.50
+    assert Decimal(response.json()["amount"]) == Decimal(100.50)
 
 
 def test_create_multiple_expenses_for_same_user(client, auth_user):
@@ -232,22 +242,39 @@ def test_create_expense_missing_amount(client, auth_user):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize(
-    "amount",
-    [999999999999999, 100.123456789],
-)
-def test_create_expense_large_and_high_precision_amount(client, auth_user, amount):
+def test_create_expense_with_maximum_valid_amount(client, auth_user):
     response = client.post(
         EXPENSE_URL,
         json={
-            "amount": amount,
+            "amount": 9999999999.99,
             "date": "2026-09-01",
             "category": "Food",
         },
         headers=auth_user["headers"],
     )
 
-    assert response.status_code in (201, 422)
+    assert response.status_code == 201
+
+    data = response.json()
+
+    assert float(data["amount"]) == 9999999999.99
+
+
+def test_create_expense_with_high_precision_amount_returns_422(
+    client,
+    auth_user,
+):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "amount": 100.123456789,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
 
 
 # ============================================================
@@ -619,20 +646,29 @@ def test_get_expenses_response_contract(client, auth_user):
 
     assert set(expense.keys()) == {
         "id",
+        "icon",
         "amount",
         "date",
         "category",
         "description",
+        "created_at",
+        "updated_at",
     }
+
     assert isinstance(expense["id"], int)
-    assert isinstance(expense["amount"], (int, float))
+    assert isinstance(expense["icon"], str)
+
+    # Decimal values are serialized as strings in the API response.
+    assert isinstance(expense["amount"], str)
+
+    # Verify that the returned string is a valid Decimal value.
+    assert Decimal(expense["amount"]) == Decimal("100.00")
+
+    assert isinstance(expense["date"], str)
     assert isinstance(expense["category"], str)
     assert isinstance(expense["description"], str)
-
-    assert "user_id" not in expense
-    assert "password" not in expense
-    assert "hashed_password" not in expense
-    assert "token" not in expense
+    assert isinstance(expense["created_at"], str)
+    assert isinstance(expense["updated_at"], str)
 
 
 def test_get_expenses_ordered_by_date_desc_and_id_desc(
@@ -872,7 +908,7 @@ def test_patch_amount_only(client, auth_user):
 
     data = response.json()
 
-    assert data["amount"] == 500
+    assert Decimal(data["amount"]) == Decimal(500)
     assert data["date"] == "2026-09-01"
     assert data["category"] == "Food"
     assert data["description"] == "Monthly"
@@ -936,7 +972,7 @@ def test_patch_amount_and_date(client, auth_user):
     assert response.status_code == 200
 
     data = response.json()
-    assert data["amount"] == 500
+    assert Decimal(data["amount"]) == Decimal(500)
     assert data["date"] == "2026-09-10"
 
 
@@ -955,7 +991,7 @@ def test_patch_amount_and_category(client, auth_user):
     assert response.status_code == 200
 
     data = response.json()
-    assert data["amount"] == 500
+    assert Decimal(data["amount"]) == Decimal(500)
     assert data["category"] == "Travel"
 
 
@@ -985,7 +1021,7 @@ def test_patch_all_fields(client, auth_user):
     data = response.json()
 
     assert data["id"] == expense["id"]
-    assert data["amount"] == 500
+    assert Decimal(data["amount"]) == Decimal(500)
     assert data["date"] == "2026-09-10"
     assert data["category"] == "Bonus"
     assert data["description"] == "New"
@@ -1014,7 +1050,7 @@ def test_patch_partial_update_preserves_unspecified_fields(
 
     data = response.json()
 
-    assert data["amount"] == 100
+    assert Decimal(data["amount"]) == Decimal(100)
     assert data["date"] == "2026-09-01"
     assert data["category"] == "Bonus"
     assert data["description"] == "Monthly"
@@ -1071,24 +1107,42 @@ def test_patch_invalid_amount(client, auth_user, amount):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize(
-    "amount",
-    [999999999999999, 100.123456789],
-)
-def test_patch_large_and_high_precision_amount(
+def test_patch_expense_with_maximum_valid_amount(
     client,
     auth_user,
-    amount,
 ):
     expense = create_expense(client, auth_user)
 
     response = client.patch(
         f"{EXPENSE_URL}/{expense['id']}",
-        json={"amount": amount},
+        json={
+            "amount": 9_999_999_999.99,
+        },
         headers=auth_user["headers"],
     )
 
-    assert response.status_code in (200, 422)
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert Decimal(str(data["amount"])) == Decimal("9999999999.99")
+
+
+def test_patch_expense_with_high_precision_amount_returns_422(
+    client,
+    auth_user,
+):
+    expense = create_expense(client, auth_user)
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={
+            "amount": 100.123456789,
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
 
 
 # ============================================================
@@ -1349,7 +1403,7 @@ def test_patch_some_unchanged_and_one_changed_succeeds(
     assert response.status_code == 200
 
     data = response.json()
-    assert data["amount"] == 5000
+    assert Decimal(data["amount"]) == Decimal(5000)
     assert data["category"] == "Bonus"
 
 
@@ -1418,7 +1472,7 @@ def test_user_cannot_update_another_users_expense(
     )
 
     assert get_response.status_code == 200
-    assert get_response.json()["amount"] == 100
+    assert Decimal(get_response.json()["amount"]) == Decimal(100)
     assert get_response.json()["date"] == "2026-09-01"
     assert get_response.json()["category"] == "Food"
     assert get_response.json()["description"] == "Monthly"
@@ -1719,7 +1773,7 @@ def test_invalid_patch_does_not_modify_expense(client, auth_user):
 
     data = get_response.json()
 
-    assert data["amount"] == 100
+    assert Decimal(data["amount"]) == Decimal(100)
     assert data["date"] == "2026-09-01"
     assert data["category"] == "Food"
     assert data["description"] == "Monthly"
@@ -1781,7 +1835,7 @@ def test_updating_one_expense_does_not_modify_another(
     )
 
     assert get_expense_2.status_code == 200
-    assert get_expense_2.json()["amount"] == 200
+    assert Decimal(get_expense_2.json()["amount"]) == Decimal(200)
     assert get_expense_2.json()["category"] == "Bonus"
 
 
@@ -1839,7 +1893,7 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
     )
 
     assert update_response.status_code == 200
-    assert update_response.json()["amount"] == 500
+    assert Decimal(update_response.json()["amount"]) == Decimal(500)
     assert update_response.json()["description"] == "Updated"
 
     # GET UPDATED
@@ -1849,7 +1903,7 @@ def test_complete_expense_crud_lifecycle(client, auth_user):
     )
 
     assert get_updated_response.status_code == 200
-    assert get_updated_response.json()["amount"] == 500
+    assert Decimal(get_updated_response.json()["amount"]) == Decimal(500)
 
     # DELETE
     delete_response = client.delete(
@@ -1990,7 +2044,7 @@ def test_update_expense_multiple_times(client, auth_user):
     )
 
     assert final_response.status_code == 200
-    assert final_response.json()["amount"] == 300
+    assert Decimal(final_response.json()["amount"]) == Decimal(300)
 
 
 def test_delete_after_update(client, auth_user):
@@ -2034,7 +2088,7 @@ def test_valid_update_after_failed_update(client, auth_user):
     )
 
     assert valid_response.status_code == 200
-    assert valid_response.json()["amount"] == 200
+    assert Decimal(valid_response.json()["amount"]) == Decimal(200)
 
 
 def test_same_date_records_remain_independent(client, auth_user):
@@ -2067,7 +2121,7 @@ def test_same_date_records_remain_independent(client, auth_user):
     )
 
     assert expense_2_response.status_code == 200
-    assert expense_2_response.json()["amount"] == 200
+    assert Decimal(expense_2_response.json()["amount"]) == Decimal(200)
 
 
 def test_same_category_records_remain_independent(client, auth_user):
@@ -2097,7 +2151,7 @@ def test_same_category_records_remain_independent(client, auth_user):
     )
 
     assert remaining_response.status_code == 200
-    assert remaining_response.json()["amount"] == 200
+    assert Decimal(remaining_response.json()["amount"]) == Decimal(200)
 
 
 # ============================================================
@@ -2162,22 +2216,24 @@ def test_get_expense_by_id_response_contract(
 
     assert set(data.keys()) == {
         "id",
+        "icon",
         "amount",
         "date",
         "category",
         "description",
+        "created_at",
+        "updated_at"
     }
 
     assert isinstance(data["id"], int)
-    assert isinstance(data["amount"], (int, float))
+    assert isinstance(data["icon"], str)
+    assert isinstance(data["amount"], str)
+    assert Decimal(data["amount"]) == Decimal("100.00")
     assert isinstance(data["date"], str)
     assert isinstance(data["category"], str)
     assert isinstance(data["description"], str)
-
-    assert "user_id" not in data
-    assert "password" not in data
-    assert "hashed_password" not in data
-    assert "token" not in data
+    assert isinstance(data["created_at"], str)
+    assert isinstance(data["updated_at"], str)
 
 
 # ============================================================
@@ -2260,24 +2316,31 @@ def test_patch_expense_response_contract(
 
     assert set(data.keys()) == {
         "id",
+        "icon",
         "amount",
         "date",
         "category",
         "description",
+        "created_at",
+        "updated_at"
     }
 
     assert isinstance(data["id"], int)
-    assert isinstance(data["amount"], (int, float))
+    assert isinstance(data["icon"], str)
+    assert isinstance(data["amount"], str)
     assert isinstance(data["date"], str)
     assert isinstance(data["category"], str)
     assert isinstance(data["description"], str)
+    assert isinstance(data["created_at"], str)
+    assert isinstance(data["updated_at"], str)
 
-    assert data["amount"] == 500
+    assert Decimal(data["amount"]) == Decimal("500.00")
 
     assert "user_id" not in data
     assert "password" not in data
     assert "hashed_password" not in data
     assert "token" not in data
+
 
 
 # ============================================================
@@ -2322,26 +2385,27 @@ def test_delete_expense_invalid_authentication(
 # ============================================================
 
 
+@pytest.mark.parametrize(
+    "amount",
+    [
+        999999999999999,
+        100.123456789,
+    ],
+)
 def test_create_expense_with_very_large_amount(
     client,
     auth_user,
+    amount,
 ):
-    response = client.post(
-        EXPENSE_URL,
-        json={
-            "amount": 999999999999999,
-            "date": "2026-09-01",
-            "category": "Food",
-            "description": "Very large expense",
-        },
+    expense = create_expense(client, auth_user)
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"amount": amount},
         headers=auth_user["headers"],
     )
 
-    assert response.status_code == 201
-
-    data = response.json()
-
-    assert data["amount"] == 999999999999999
+    assert response.status_code == 422
 
 
 def test_create_expense_with_high_precision_amount(
@@ -2361,11 +2425,15 @@ def test_create_expense_with_high_precision_amount(
         headers=auth_user["headers"],
     )
 
-    assert response.status_code == 201
+    assert response.status_code == 422
 
     data = response.json()
 
-    assert data["amount"] == pytest.approx(amount)
+    assert "detail" in data
+    assert any(
+        error["loc"] == ["body", "amount"]
+        for error in data["detail"]
+    )
 
 
 # ============================================================
@@ -2393,11 +2461,23 @@ def test_patch_expense_with_very_large_amount(
         headers=auth_user["headers"],
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 422
 
     data = response.json()
 
-    assert data["amount"] == large_amount
+    assert "detail" in data
+    assert any(
+        error["loc"] == ["body", "amount"]
+        for error in data["detail"]
+    )
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+    assert float(get_response.json()["amount"]) == 100
 
 
 def test_patch_expense_with_high_precision_amount(
@@ -2420,11 +2500,25 @@ def test_patch_expense_with_high_precision_amount(
         headers=auth_user["headers"],
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 422
 
     data = response.json()
 
-    assert data["amount"] == pytest.approx(amount)
+    assert "detail" in data
+
+    assert any(
+        error["loc"] == ["body", "amount"]
+        for error in data["detail"]
+    )
+
+    # Verify the original value was not changed
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+    assert float(get_response.json()["amount"]) == 100
 
 
 # ============================================================
@@ -2518,3 +2612,570 @@ def test_user_cannot_delete_another_users_expense_and_record_remains(
     assert data["id"] == expense["id"]
     assert data["amount"] == expense["amount"]
     assert data["category"] == expense["category"]
+
+# ============================================================
+# ICON FIELD - UPDATED EXPENSE SCHEMA COVERAGE
+# These tests are intentionally additive: no existing expense-route
+# test has been removed. They cover the new shared-schema/model field.
+# ============================================================
+
+
+def test_create_expense_with_icon(client, auth_user):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": "🍔",
+            "amount": 50000,
+            "date": "2026-09-01",
+            "category": "Food",
+            "description": "Monthly expense",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 201
+    assert response.json()["icon"] == "🍔"
+
+
+def test_create_expense_without_icon_uses_default_empty_string(client, auth_user):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "amount": 50000,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 201
+    assert response.json()["icon"] == ""
+
+
+def test_create_expense_with_empty_icon(client, auth_user):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": "",
+            "amount": 100,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 201
+    assert response.json()["icon"] == ""
+
+
+def test_create_expense_with_whitespace_icon_is_allowed_and_preserved(client, auth_user):
+    icon = "   "
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": icon,
+            "amount": 100,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 201
+    assert response.json()["icon"] == icon
+
+
+def test_create_expense_with_icon_at_max_length(client, auth_user):
+    icon = "i" * 100
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": icon,
+            "amount": 100,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 201
+    assert response.json()["icon"] == icon
+
+
+def test_create_expense_with_icon_over_max_length_is_rejected(client, auth_user):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": "i" * 101,
+            "amount": 100,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+def test_create_expense_with_null_icon_is_rejected(client, auth_user):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": None,
+            "amount": 100,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("icon", [123, 12.5, True, [], {}, ["food"]])
+def test_create_expense_with_invalid_icon_type_is_rejected(client, auth_user, icon):
+    response = client.post(
+        EXPENSE_URL,
+        json={
+            "icon": icon,
+            "amount": 100,
+            "date": "2026-09-01",
+            "category": "Food",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+def test_get_expenses_returns_icon_for_each_expense(client, auth_user):
+    first = create_expense(client, auth_user, icon="🍔", amount=100)
+    second = create_expense(client, auth_user, icon="🚕", amount=200)
+
+    response = client.get(EXPENSE_URL, headers=auth_user["headers"])
+
+    assert response.status_code == 200
+    expenses = {item["id"]: item for item in response.json()}
+    assert expenses[first["id"]]["icon"] == "🍔"
+    assert expenses[second["id"]]["icon"] == "🚕"
+
+
+def test_get_expense_by_id_returns_icon(client, auth_user):
+    expense = create_expense(client, auth_user, icon="🏠")
+
+    response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["icon"] == "🏠"
+
+
+def test_patch_expense_icon_only(client, auth_user):
+    expense = create_expense(client, auth_user, icon="🍔")
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": "🚕"},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["icon"] == "🚕"
+    assert data["amount"] == expense["amount"]
+    assert data["date"] == expense["date"]
+    assert data["category"] == expense["category"]
+    assert data["description"] == expense["description"]
+
+
+def test_patch_expense_icon_to_empty_string(client, auth_user):
+    expense = create_expense(client, auth_user, icon="🍔")
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": ""},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["icon"] == ""
+
+
+def test_patch_expense_icon_at_max_length(client, auth_user):
+    expense = create_expense(client, auth_user)
+    icon = "x" * 100
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": icon},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["icon"] == icon
+
+
+def test_patch_expense_icon_over_max_length_is_rejected(client, auth_user):
+    expense = create_expense(client, auth_user)
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": "x" * 101},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+def test_patch_expense_icon_null_is_rejected(client, auth_user):
+    expense = create_expense(client, auth_user)
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": None},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("icon", [123, 12.5, True, [], {}, ["food"]])
+def test_patch_expense_invalid_icon_type_is_rejected(client, auth_user, icon):
+    expense = create_expense(client, auth_user)
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": icon},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+def test_patch_expense_icon_does_not_modify_other_fields(client, auth_user):
+    expense = create_expense(
+        client,
+        auth_user,
+        icon="A",
+        amount=321.45,
+        date="2026-08-20",
+        category="Travel",
+        description="Original description",
+    )
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": "B"},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["icon"] == "B"
+    assert Decimal(data["amount"]) == Decimal("321.45")
+    assert data["date"] == "2026-08-20"
+    assert data["category"] == "Travel"
+    assert data["description"] == "Original description"
+
+
+def test_patch_expense_all_fields_including_icon(client, auth_user):
+    expense = create_expense(client, auth_user, icon="A")
+
+    response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={
+            "icon": "🚗",
+            "amount": 999.99,
+            "date": "2026-09-12",
+            "category": "Transport",
+            "description": "Updated expense",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["icon"] == "🚗"
+    assert Decimal(data["amount"]) == Decimal("999.99")
+    assert data["date"] == "2026-09-12"
+    assert data["category"] == "Transport"
+    assert data["description"] == "Updated expense"
+
+
+def test_expense_icon_persists_through_create_get_update_and_list(client, auth_user):
+    created = create_expense(client, auth_user, icon="🛒")
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{created['id']}",
+        headers=auth_user["headers"],
+    )
+    assert get_response.status_code == 200
+    assert get_response.json()["icon"] == "🛒"
+
+    update_response = client.patch(
+        f"{EXPENSE_URL}/{created['id']}",
+        json={"icon": "🧾"},
+        headers=auth_user["headers"],
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["icon"] == "🧾"
+
+    list_response = client.get(EXPENSE_URL, headers=auth_user["headers"])
+    assert list_response.status_code == 200
+    item = next(x for x in list_response.json() if x["id"] == created["id"])
+    assert item["icon"] == "🧾"
+
+
+def test_delete_expense_after_icon_update(client, auth_user):
+    expense = create_expense(client, auth_user, icon="🍔")
+
+    update_response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={"icon": "🚕"},
+        headers=auth_user["headers"],
+    )
+    assert update_response.status_code == 200
+
+    delete_response = client.delete(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+    assert delete_response.status_code in (200, 204)
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+    assert get_response.status_code == 404
+
+
+
+def test_expense_created_at_is_set(
+    client,
+    auth_user,
+):
+    expense = create_expense(
+        client,
+        auth_user,
+    )
+
+    response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["created_at"] is not None
+
+    created_at = datetime.fromisoformat(
+        data["created_at"].replace("Z", "+00:00")
+    )
+
+    assert isinstance(created_at, datetime)
+    assert created_at.tzinfo is not None
+    assert created_at.utcoffset() is not None
+
+
+def test_expense_updated_at_is_set_on_creation(
+    client,
+    auth_user,
+):
+    expense = create_expense(
+        client,
+        auth_user,
+    )
+
+    response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["updated_at"] is not None
+
+    updated_at = datetime.fromisoformat(
+        data["updated_at"].replace("Z", "+00:00")
+    )
+
+    assert isinstance(updated_at, datetime)
+    assert updated_at.tzinfo is not None
+    assert updated_at.utcoffset() is not None
+
+
+def test_expense_created_at_remains_same_after_update(
+    client,
+    auth_user,
+):
+    expense = create_expense(
+        client,
+        auth_user,
+        amount=100,
+    )
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    original_created_at = get_response.json()["created_at"]
+
+    time.sleep(0.01)
+
+    update_response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={
+            "amount": 200,
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert update_response.status_code == 200
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    updated_expense = get_response.json()
+
+    assert updated_expense["created_at"] == original_created_at
+
+
+def test_expense_updated_at_changes_after_update(
+    client,
+    auth_user,
+):
+    expense = create_expense(
+        client,
+        auth_user,
+        amount=100,
+    )
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    original_updated_at = datetime.fromisoformat(
+        get_response.json()["updated_at"].replace("Z", "+00:00")
+    )
+
+    time.sleep(0.01)
+
+    update_response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={
+            "amount": 200,
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert update_response.status_code == 200
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    updated_at = datetime.fromisoformat(
+        get_response.json()["updated_at"].replace("Z", "+00:00")
+    )
+
+    assert updated_at > original_updated_at
+
+
+def test_expense_updated_at_changes_on_multiple_updates(
+    client,
+    auth_user,
+):
+    expense = create_expense(
+        client,
+        auth_user,
+        amount=100,
+        category="Food",
+    )
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    initial_data = get_response.json()
+
+    original_created_at = initial_data["created_at"]
+
+    updated_at_1 = datetime.fromisoformat(
+        initial_data["updated_at"].replace("Z", "+00:00")
+    )
+
+    time.sleep(0.01)
+
+    update_response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={
+            "amount": 200,
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert update_response.status_code == 200
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    data_after_first_update = get_response.json()
+
+    updated_at_2 = datetime.fromisoformat(
+        data_after_first_update["updated_at"].replace("Z", "+00:00")
+    )
+
+    time.sleep(0.01)
+
+    update_response = client.patch(
+        f"{EXPENSE_URL}/{expense['id']}",
+        json={
+            "category": "Travel",
+        },
+        headers=auth_user["headers"],
+    )
+
+    assert update_response.status_code == 200
+
+    get_response = client.get(
+        f"{EXPENSE_URL}/{expense['id']}",
+        headers=auth_user["headers"],
+    )
+
+    assert get_response.status_code == 200
+
+    data_after_second_update = get_response.json()
+
+    updated_at_3 = datetime.fromisoformat(
+        data_after_second_update["updated_at"].replace("Z", "+00:00")
+    )
+
+    assert data_after_second_update["created_at"] == original_created_at
+
+    assert updated_at_1 < updated_at_2 < updated_at_3

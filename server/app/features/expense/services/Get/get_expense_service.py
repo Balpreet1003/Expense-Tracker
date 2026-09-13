@@ -16,7 +16,7 @@ def get_expenses(
         )
         .order_by(
             Expense.date.desc(),
-            Expense.id.desc(),
+            Expense.created_at.desc(),
         )
     )
 

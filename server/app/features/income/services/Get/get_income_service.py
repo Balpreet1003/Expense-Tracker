@@ -15,7 +15,7 @@ def get_incomes(
         )
         .order_by(
             Income.date.desc(),
-            Income.id.desc(),
+            Income.created_at.desc(),
         )
     )
 

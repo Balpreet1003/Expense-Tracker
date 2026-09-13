@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
-
-from sqlalchemy import Date, Float, ForeignKey, Integer, String
+from decimal import Decimal
+from sqlalchemy import Column, Date, DateTime, Numeric, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from datetime import datetime, timezone
 from app.database.base import Base
 
 
@@ -19,8 +19,23 @@ class Income(Base):
         autoincrement=True,
     )
 
-    amount: Mapped[float] = mapped_column(
-        Float,
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    icon: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        default="",
+    )
+
+    amount: Mapped[Decimal] = mapped_column(
+        Numeric(precision=12, scale=2),
         nullable=False,
     )
 
@@ -40,13 +55,17 @@ class Income(Base):
         default="",
     )
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE"
-        ),
+    created_at = Column(
+        DateTime(timezone=True),
         nullable=False,
-        index=True,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     user: Mapped["User"] = relationship(

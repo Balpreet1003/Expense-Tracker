@@ -11,6 +11,7 @@ def add_expense(
 ):
     try:
         expense = Expense(
+            icon=expense_data.icon,
             amount=expense_data.amount,
             date=expense_data.date,
             category=expense_data.category,

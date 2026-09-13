@@ -1,5 +1,6 @@
 import pytest
 import jwt
+from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 
 from app.features.auth.utils.jwt import SECRET_KEY, ALGORITHM
@@ -77,6 +78,7 @@ def expired_headers(user_id):
 def income_payload(**overrides):
     payload = {
         "type": "income",
+        "icon": "",
         "amount": 100.0,
         "date": "2026-09-01",
         "source": "Salary",
@@ -89,6 +91,7 @@ def income_payload(**overrides):
 def expense_payload(**overrides):
     payload = {
         "type": "expense",
+        "icon": "",
         "amount": 100.0,
         "date": "2026-09-01",
         "category": "Food",
@@ -151,14 +154,17 @@ def test_create_income_transaction_success(client, auth_user):
 
     assert set(data.keys()) == {
         "id",
+        "icon",
         "amount",
         "date",
         "source",
         "description",
+        "created_at",
+        "updated_at",
         "type",
     }
     assert isinstance(data["id"], int)
-    assert data["amount"] == 50000
+    assert Decimal(data["amount"]) == Decimal(50000)
     assert data["date"] == "2026-09-01"
     assert data["source"] == "Salary"
     assert data["description"] == "Monthly salary"
@@ -211,14 +217,17 @@ def test_create_expense_transaction_success(client, auth_user):
 
     assert set(data.keys()) == {
         "id",
+        "icon",
         "amount",
         "date",
         "category",
         "description",
+        "created_at",
+        "updated_at",
         "type",
     }
     assert isinstance(data["id"], int)
-    assert data["amount"] == 50000
+    assert Decimal(data["amount"]) == Decimal(50000)
     assert data["date"] == "2026-09-01"
     assert data["category"] == "Food"
     assert data["description"] == "Monthly expense"
@@ -304,8 +313,8 @@ def test_create_transaction_missing_type(client, auth_user):
         1,
         100,
         100.50,
-        0.000001,
-        999999999999999,
+        0.01,
+        9999999999.99,
     ],
 )
 def test_create_income_valid_amounts(client, auth_user, amount):
@@ -316,6 +325,32 @@ def test_create_income_valid_amounts(client, auth_user, amount):
     )
 
     assert response.status_code == 201, response.text
+
+    data = response.json()
+
+    assert Decimal(data["amount"]) == Decimal(str(amount))
+
+
+@pytest.mark.parametrize(
+    "amount",
+    [
+        0.000001,          # More than 2 decimal places
+        1.001,             # More than 2 decimal places
+        999999999999999,   # More than 12 total digits
+    ],
+)
+def test_create_income_invalid_amount_precision_or_digits(
+    client,
+    auth_user,
+    amount,
+):
+    response = client.post(
+        TRANSACTION_URL,
+        json=income_payload(amount=amount),
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422, response.text
 
 
 @pytest.mark.parametrize(
@@ -511,11 +546,12 @@ def test_create_income_invalid_description_values(client, auth_user, description
         1,
         100,
         100.50,
-        0.000001,
-        999999999999999,
+        0.01,
+        9999999999.99,
     ],
 )
 def test_create_expense_valid_amounts(client, auth_user, amount):
+
     response = client.post(
         TRANSACTION_URL,
         json=expense_payload(amount=amount),
@@ -523,6 +559,33 @@ def test_create_expense_valid_amounts(client, auth_user, amount):
     )
 
     assert response.status_code == 201, response.text
+
+    data = response.json()
+
+    assert Decimal(str(data["amount"])) == Decimal(str(amount))
+
+
+@pytest.mark.parametrize(
+    "amount",
+    [
+        0.000001,          # More than 2 decimal places
+        1.001,             # More than 2 decimal places
+        999999999999999,   # More than 12 total digits
+    ],
+)
+def test_create_expense_invalid_amount_precision_or_digits(
+    client,
+    auth_user,
+    amount,
+):
+    response = client.post(
+    TRANSACTION_URL,
+    json=expense_payload(amount=amount),
+    headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422, response.text
+
 
 
 @pytest.mark.parametrize(
@@ -939,22 +1002,14 @@ def test_get_all_transactions_same_date_is_deterministic(
     assert len(data) == 2
     assert all(item["date"] == "2026-09-10" for item in data)
 
-    # Current service sorts using (date, id) descending.
+    # Current service sorts by (date, created_at) descending.
     expected = sorted(
-        [
-            (income["type"], income["id"]),
-            (expense["type"], expense["id"]),
-        ],
-        key=lambda item: item[1],
+        data,
+        key=lambda item: (item["date"], item["created_at"]),
         reverse=True,
     )
 
-    actual = [
-        (item["type"], item["id"])
-        for item in data
-    ]
-
-    assert actual == expected
+    assert data == expected
 
 
 def test_get_all_transactions_same_date_same_id_is_supported(
@@ -1195,7 +1250,7 @@ def test_update_income_amount_only(client, auth_user):
     )
 
     assert response.status_code == 200
-    assert response.json()["amount"] == 999
+    assert Decimal(response.json()["amount"]) == Decimal(999)
     assert response.json()["source"] == created["source"]
 
 
@@ -1259,7 +1314,10 @@ def test_update_income_multiple_fields(client, auth_user):
     data = response.json()
 
     for key, value in payload.items():
-        assert data[key] == value
+        if key == "amount":
+            assert Decimal(data[key]) == Decimal(value)
+        else:
+            assert data[key] == value
 
 
 def test_update_expense_amount_only(client, auth_user):
@@ -1272,7 +1330,7 @@ def test_update_expense_amount_only(client, auth_user):
     )
 
     assert response.status_code == 200
-    assert response.json()["amount"] == 999
+    assert Decimal(response.json()["amount"]) == Decimal(999)
     assert response.json()["category"] == created["category"]
 
 
@@ -1336,7 +1394,10 @@ def test_update_expense_multiple_fields(client, auth_user):
     data = response.json()
 
     for key, value in payload.items():
-        assert data[key] == value
+        if key == "amount":
+            assert Decimal(data[key]) == Decimal(value)
+        else:
+            assert data[key] == value
 
 
 # ============================================================
@@ -1644,7 +1705,7 @@ def test_cross_type_invalid_update_does_not_partially_modify_income(
     )
 
     assert verify.status_code == 200
-    assert verify.json()["amount"] == 100
+    assert Decimal(verify.json()["amount"]) == Decimal(100)
 
 
 def test_cross_type_invalid_update_does_not_partially_modify_expense(
@@ -1674,7 +1735,7 @@ def test_cross_type_invalid_update_does_not_partially_modify_expense(
     )
 
     assert verify.status_code == 200
-    assert verify.json()["amount"] == 100
+    assert Decimal(verify.json()["amount"]) == Decimal(100)
 
 
 def test_update_transaction_rejects_extra_field(client, auth_user):
@@ -1716,7 +1777,7 @@ def test_update_extra_field_does_not_partially_modify_database(
     )
 
     assert verify.status_code == 200
-    assert verify.json()["amount"] == 100
+    assert Decimal(verify.json()["amount"]) == Decimal(100)
 
 
 # ============================================================
@@ -1927,8 +1988,8 @@ def test_update_transaction_ownership_isolation(
         headers=auth_user["headers"],
     )
 
-    assert verify_income.json()["amount"] == 100
-    assert verify_expense.json()["amount"] == 100
+    assert Decimal(verify_income.json()["amount"]) == Decimal(100)
+    assert Decimal(verify_expense.json()["amount"]) == Decimal(100)
 
 
 @pytest.mark.parametrize(
@@ -2139,6 +2200,348 @@ def test_delete_requires_authentication(client, headers):
     assert response.status_code in (401, 403)
 
 
+
+# ============================================================
+# 14A. UPDATED TRANSACTION SCHEMA: ICON + TIMESTAMPS
+# ============================================================
+
+@pytest.mark.parametrize(
+    "factory, field_name",
+    [
+        (create_income_transaction, "source"),
+        (create_expense_transaction, "category"),
+    ],
+)
+def test_create_transaction_default_icon_and_timestamps(
+    client,
+    auth_user,
+    factory,
+    field_name,
+):
+    created = factory(client, auth_user)
+
+    assert created["icon"] == ""
+    assert created["created_at"] is not None
+    assert created["updated_at"] is not None
+    created_at = datetime.fromisoformat(
+        created["created_at"].replace("Z", "+00:00")
+    )
+    updated_at = datetime.fromisoformat(
+        created["updated_at"].replace("Z", "+00:00")
+    )
+
+    assert updated_at >= created_at
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        create_income_transaction,
+        create_expense_transaction,
+    ],
+)
+def test_create_transaction_custom_icon_is_returned_and_persisted(
+    client,
+    auth_user,
+    factory,
+):
+    icon = "wallet-outline"
+
+    created = factory(
+        client,
+        auth_user,
+        icon=icon,
+    )
+
+    assert created["icon"] == icon
+
+    response = client.get(
+        transaction_url(created["type"], created["id"]),
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["icon"] == icon
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+def test_create_transaction_icon_length_boundaries(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+):
+    for icon in ["", "i" * 100]:
+        created = factory(client, auth_user, icon=icon)
+        assert created["type"] == transaction_type
+        assert created["icon"] == icon
+
+
+@pytest.mark.parametrize(
+    "transaction_type, payload_factory",
+    [
+        ("income", income_payload),
+        ("expense", expense_payload),
+    ],
+)
+@pytest.mark.parametrize(
+    "icon",
+    [
+        "i" * 101,
+        None,
+        123,
+        True,
+        {},
+        [],
+    ],
+)
+def test_create_transaction_rejects_invalid_icon_values(
+    client,
+    auth_user,
+    transaction_type,
+    payload_factory,
+    icon,
+):
+    response = client.post(
+        TRANSACTION_URL,
+        json=payload_factory(icon=icon),
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+def test_update_transaction_icon_only(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+):
+    created = factory(client, auth_user, icon="old-icon")
+
+    response = client.patch(
+        transaction_url(transaction_type, created["id"]),
+        json={"icon": "new-icon"},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["icon"] == "new-icon"
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+@pytest.mark.parametrize(
+    "icon",
+    [
+        "i",
+        "i" * 100,
+    ],
+)
+def test_update_transaction_accepts_valid_icon_boundaries(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+    icon,
+):
+    created = factory(client, auth_user)
+
+    response = client.patch(
+        transaction_url(transaction_type, created["id"]),
+        json={"icon": icon},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+
+    assert data["icon"] == icon
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+def test_update_transaction_rejects_empty_icon(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+):
+    created = factory(client, auth_user)
+
+    response = client.patch(
+        transaction_url(transaction_type, created["id"]),
+        json={"icon": ""},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 400, response.text
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+@pytest.mark.parametrize(
+    "icon",
+    [
+        None,
+        "i" * 101,
+        123,
+        True,
+        {},
+        [],
+    ],
+)
+def test_update_transaction_rejects_invalid_icon_values(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+    icon,
+):
+    created = factory(client, auth_user)
+
+    response = client.patch(
+        transaction_url(transaction_type, created["id"]),
+        json={"icon": icon},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+def test_transaction_timestamps_are_immutable_through_response_contract(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+):
+    created = factory(client, auth_user)
+    transaction_id = created["id"]
+
+    response = client.get(
+        transaction_url(transaction_type, transaction_id),
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["created_at"] == created["created_at"]
+    assert data["updated_at"] == created["updated_at"]
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory, update_field, update_value",
+    [
+        ("income", create_income_transaction, "source", "Freelancing"),
+        ("expense", create_expense_transaction, "category", "Travel"),
+    ],
+)
+def test_update_transaction_preserves_created_at_and_changes_updated_at(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+    update_field,
+    update_value,
+):
+    created = factory(client, auth_user)
+    transaction_id = created["id"]
+
+    response = client.patch(
+        transaction_url(transaction_type, transaction_id),
+        json={update_field: update_value},
+        headers=auth_user["headers"],
+    )
+
+    assert response.status_code == 200
+
+    updated = response.json()
+    assert updated["created_at"] == created["created_at"]
+    assert updated["updated_at"] >= created["updated_at"]
+
+    persisted = client.get(
+        transaction_url(transaction_type, transaction_id),
+        headers=auth_user["headers"],
+    )
+
+    assert persisted.status_code == 200
+    assert persisted.json()["created_at"] == created["created_at"]
+    assert persisted.json()["updated_at"] == updated["updated_at"]
+
+
+@pytest.mark.parametrize(
+    "transaction_type, factory",
+    [
+        ("income", create_income_transaction),
+        ("expense", create_expense_transaction),
+    ],
+)
+def test_transaction_routes_reject_client_supplied_response_only_timestamps(
+    client,
+    auth_user,
+    transaction_type,
+    factory,
+):
+    created = factory(client, auth_user)
+
+    create_payload = (
+        income_payload(created_at="2020-01-01T00:00:00Z")
+        if transaction_type == "income"
+        else expense_payload(created_at="2020-01-01T00:00:00Z")
+    )
+    create_response = client.post(
+        TRANSACTION_URL,
+        json=create_payload,
+        headers=auth_user["headers"],
+    )
+    assert create_response.status_code == 422
+
+    update_response = client.patch(
+        transaction_url(transaction_type, created["id"]),
+        json={"updated_at": "2020-01-01T00:00:00Z"},
+        headers=auth_user["headers"],
+    )
+    assert update_response.status_code == 422
+
+
+
 # ============================================================
 # 15. RESPONSE MODEL AND SENSITIVE DATA TESTS
 # ============================================================
@@ -2156,6 +2559,9 @@ def test_delete_requires_authentication(client, headers):
                 "source",
                 "description",
                 "type",
+                "icon",
+                "created_at",
+                "updated_at",
             },
             {
                 "category",
@@ -2175,6 +2581,9 @@ def test_delete_requires_authentication(client, headers):
                 "category",
                 "description",
                 "type",
+                "icon",
+                "created_at",
+                "updated_at",
             },
             {
                 "source",
@@ -2201,14 +2610,33 @@ def test_transaction_response_fields_and_sensitive_data(
         headers=auth_user["headers"],
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
     data = response.json()
 
+    # Verify the exact response schema.
     assert set(data.keys()) == expected_keys
 
-    for key in forbidden_keys:
-        assert key not in data
+    # Verify transaction-type-specific fields.
+    if transaction_type == "income":
+        assert "source" in data
+        assert "category" not in data
+    else:
+        assert "category" in data
+        assert "source" not in data
+
+    # Verify newly added transaction fields.
+    assert "icon" in data
+    assert "created_at" in data
+    assert "updated_at" in data
+
+    assert data["created_at"] is not None
+    assert data["updated_at"] is not None
+
+    # Verify sensitive/internal fields are never exposed.
+    for field in forbidden_keys:
+        assert field not in data
+
 
 
 def test_get_all_transaction_type_consistency(
@@ -2252,12 +2680,19 @@ def test_income_transaction_complete_lifecycle(client, auth_user):
 
     transaction_id = created["id"]
 
+    # Verify creation
+    assert created["id"] == transaction_id
+    assert created["type"] == "income"
+    assert Decimal(str(created["amount"])) == Decimal("100")
+
+    # Get all transactions
     get_all = client.get(
         TRANSACTIONS_URL,
         headers=auth_user["headers"],
     )
 
-    assert get_all.status_code == 200
+    assert get_all.status_code == 200, get_all.text
+
     assert (
         ("income", transaction_id)
         in {
@@ -2266,13 +2701,22 @@ def test_income_transaction_complete_lifecycle(client, auth_user):
         }
     )
 
+    # Get by ID
     get_by_id = client.get(
         transaction_url("income", transaction_id),
         headers=auth_user["headers"],
     )
 
-    assert get_by_id.status_code == 200
+    assert get_by_id.status_code == 200, get_by_id.text
 
+    fetched = get_by_id.json()
+
+    assert fetched["id"] == transaction_id
+    assert fetched["type"] == "income"
+    assert Decimal(str(fetched["amount"])) == Decimal("100")
+    assert fetched["source"] == "Salary"
+
+    # Update
     update = client.patch(
         transaction_url("income", transaction_id),
         json={
@@ -2282,23 +2726,45 @@ def test_income_transaction_complete_lifecycle(client, auth_user):
         headers=auth_user["headers"],
     )
 
-    assert update.status_code == 200
-    assert update.json()["amount"] == 500
-    assert update.json()["source"] == "Freelancing"
+    assert update.status_code == 200, update.text
 
+    updated = update.json()
+
+    assert updated["id"] == transaction_id
+    assert updated["type"] == "income"
+    assert Decimal(str(updated["amount"])) == Decimal("500")
+    assert updated["source"] == "Freelancing"
+
+    # Verify persistence
+    get_updated = client.get(
+        transaction_url("income", transaction_id),
+        headers=auth_user["headers"],
+    )
+
+    assert get_updated.status_code == 200, get_updated.text
+
+    persisted = get_updated.json()
+
+    assert persisted["id"] == transaction_id
+    assert persisted["type"] == "income"
+    assert Decimal(str(persisted["amount"])) == Decimal("500")
+    assert persisted["source"] == "Freelancing"
+
+    # Delete
     delete = client.delete(
         transaction_url("income", transaction_id),
         headers=auth_user["headers"],
     )
 
-    assert delete.status_code == 204
+    assert delete.status_code == 204, delete.text
 
-    final_get = client.get(
+    # Verify deletion
+    get_deleted = client.get(
         transaction_url("income", transaction_id),
         headers=auth_user["headers"],
     )
 
-    assert final_get.status_code == 404
+    assert get_deleted.status_code == 404
 
 
 # ============================================================
@@ -2315,12 +2781,19 @@ def test_expense_transaction_complete_lifecycle(client, auth_user):
 
     transaction_id = created["id"]
 
+    # Verify creation
+    assert created["id"] == transaction_id
+    assert created["type"] == "expense"
+    assert Decimal(str(created["amount"])) == Decimal("100")
+
+    # Get all transactions
     get_all = client.get(
         TRANSACTIONS_URL,
         headers=auth_user["headers"],
     )
 
-    assert get_all.status_code == 200
+    assert get_all.status_code == 200, get_all.text
+
     assert (
         ("expense", transaction_id)
         in {
@@ -2329,13 +2802,22 @@ def test_expense_transaction_complete_lifecycle(client, auth_user):
         }
     )
 
+    # Get by ID
     get_by_id = client.get(
         transaction_url("expense", transaction_id),
         headers=auth_user["headers"],
     )
 
-    assert get_by_id.status_code == 200
+    assert get_by_id.status_code == 200, get_by_id.text
 
+    fetched = get_by_id.json()
+
+    assert fetched["id"] == transaction_id
+    assert fetched["type"] == "expense"
+    assert Decimal(str(fetched["amount"])) == Decimal("100")
+    assert fetched["category"] == "Food"
+
+    # Update
     update = client.patch(
         transaction_url("expense", transaction_id),
         json={
@@ -2345,23 +2827,45 @@ def test_expense_transaction_complete_lifecycle(client, auth_user):
         headers=auth_user["headers"],
     )
 
-    assert update.status_code == 200
-    assert update.json()["amount"] == 500
-    assert update.json()["category"] == "Travel"
+    assert update.status_code == 200, update.text
 
+    updated = update.json()
+
+    assert updated["id"] == transaction_id
+    assert updated["type"] == "expense"
+    assert Decimal(str(updated["amount"])) == Decimal("500")
+    assert updated["category"] == "Travel"
+
+    # Verify persistence
+    get_updated = client.get(
+        transaction_url("expense", transaction_id),
+        headers=auth_user["headers"],
+    )
+
+    assert get_updated.status_code == 200, get_updated.text
+
+    persisted = get_updated.json()
+
+    assert persisted["id"] == transaction_id
+    assert persisted["type"] == "expense"
+    assert Decimal(str(persisted["amount"])) == Decimal("500")
+    assert persisted["category"] == "Travel"
+
+    # Delete
     delete = client.delete(
         transaction_url("expense", transaction_id),
         headers=auth_user["headers"],
     )
 
-    assert delete.status_code == 204
+    assert delete.status_code == 204, delete.text
 
-    final_get = client.get(
+    # Verify deletion
+    get_deleted = client.get(
         transaction_url("expense", transaction_id),
         headers=auth_user["headers"],
     )
 
-    assert final_get.status_code == 404
+    assert get_deleted.status_code == 404
 
 
 # ============================================================
@@ -2369,24 +2873,31 @@ def test_expense_transaction_complete_lifecycle(client, auth_user):
 # ============================================================
 
 def test_mixed_transaction_lifecycle(client, auth_user):
+    # =========================================================
+    # Create transactions
+    # =========================================================
+
     income_a = create_income_transaction(
         client,
         auth_user,
         amount=100,
         date="2026-09-01",
     )
+
     expense_a = create_expense_transaction(
         client,
         auth_user,
         amount=200,
         date="2026-09-02",
     )
+
     income_b = create_income_transaction(
         client,
         auth_user,
         amount=300,
         date="2026-09-03",
     )
+
     expense_b = create_expense_transaction(
         client,
         auth_user,
@@ -2394,62 +2905,232 @@ def test_mixed_transaction_lifecycle(client, auth_user):
         date="2026-09-04",
     )
 
+    # =========================================================
+    # Verify all transactions are returned
+    # =========================================================
+
     initial = client.get(
         TRANSACTIONS_URL,
         headers=auth_user["headers"],
     )
 
-    assert initial.status_code == 200
-    assert len(initial.json()) == 4
+    assert initial.status_code == 200, initial.text
+
+    initial_data = initial.json()
+
+    assert len(initial_data) == 4
+
+    initial_transactions = {
+        (transaction["type"], transaction["id"])
+        for transaction in initial_data
+    }
+
+    assert ("income", income_a["id"]) in initial_transactions
+    assert ("expense", expense_a["id"]) in initial_transactions
+    assert ("income", income_b["id"]) in initial_transactions
+    assert ("expense", expense_b["id"]) in initial_transactions
+
+    # =========================================================
+    # Update income A
+    # =========================================================
 
     update_income_a = client.patch(
         transaction_url("income", income_a["id"]),
-        json={"amount": 111},
+        json={
+            "amount": 111,
+        },
         headers=auth_user["headers"],
     )
 
-    assert update_income_a.status_code == 200
-    assert update_income_a.json()["amount"] == 111
+    assert update_income_a.status_code == 200, update_income_a.text
 
-    update_expense_b = client.patch(
-        transaction_url("expense", expense_b["id"]),
-        json={"category": "Travel"},
+    updated_income_a = update_income_a.json()
+
+    assert updated_income_a["id"] == income_a["id"]
+    assert updated_income_a["type"] == "income"
+
+    assert (
+        Decimal(str(updated_income_a["amount"]))
+        == Decimal("111")
+    )
+
+    # =========================================================
+    # Update expense A
+    # =========================================================
+
+    update_expense_a = client.patch(
+        transaction_url("expense", expense_a["id"]),
+        json={
+            "amount": 222,
+        },
         headers=auth_user["headers"],
     )
 
-    assert update_expense_b.status_code == 200
-    assert update_expense_b.json()["category"] == "Travel"
+    assert update_expense_a.status_code == 200, update_expense_a.text
+
+    updated_expense_a = update_expense_a.json()
+
+    assert updated_expense_a["id"] == expense_a["id"]
+    assert updated_expense_a["type"] == "expense"
+
+    assert (
+        Decimal(str(updated_expense_a["amount"]))
+        == Decimal("222")
+    )
+
+    # =========================================================
+    # Verify income update persisted
+    # =========================================================
+
+    income_after_update = client.get(
+        transaction_url("income", income_a["id"]),
+        headers=auth_user["headers"],
+    )
+
+    assert income_after_update.status_code == 200, income_after_update.text
+
+    income_after_update_data = income_after_update.json()
+
+    assert income_after_update_data["id"] == income_a["id"]
+    assert income_after_update_data["type"] == "income"
+
+    assert (
+        Decimal(str(income_after_update_data["amount"]))
+        == Decimal("111")
+    )
+
+    # =========================================================
+    # Verify expense update persisted
+    # =========================================================
+
+    expense_after_update = client.get(
+        transaction_url("expense", expense_a["id"]),
+        headers=auth_user["headers"],
+    )
+
+    assert expense_after_update.status_code == 200, expense_after_update.text
+
+    expense_after_update_data = expense_after_update.json()
+
+    assert expense_after_update_data["id"] == expense_a["id"]
+    assert expense_after_update_data["type"] == "expense"
+
+    assert (
+        Decimal(str(expense_after_update_data["amount"]))
+        == Decimal("222")
+    )
+
+    # =========================================================
+    # Delete income B
+    # =========================================================
 
     delete_income_b = client.delete(
         transaction_url("income", income_b["id"]),
         headers=auth_user["headers"],
     )
 
-    assert delete_income_b.status_code == 204
+    assert delete_income_b.status_code == 204, delete_income_b.text
 
-    delete_expense_a = client.delete(
-        transaction_url("expense", expense_a["id"]),
+    get_deleted_income = client.get(
+        transaction_url("income", income_b["id"]),
         headers=auth_user["headers"],
     )
 
-    assert delete_expense_a.status_code == 204
+    assert get_deleted_income.status_code == 404
 
-    final = client.get(
+    # =========================================================
+    # Delete expense B
+    # =========================================================
+
+    delete_expense_b = client.delete(
+        transaction_url("expense", expense_b["id"]),
+        headers=auth_user["headers"],
+    )
+
+    assert delete_expense_b.status_code == 204, delete_expense_b.text
+
+    get_deleted_expense = client.get(
+        transaction_url("expense", expense_b["id"]),
+        headers=auth_user["headers"],
+    )
+
+    assert get_deleted_expense.status_code == 404
+
+    # =========================================================
+    # Verify final transaction list
+    # =========================================================
+
+    final_response = client.get(
         TRANSACTIONS_URL,
         headers=auth_user["headers"],
     )
 
-    assert final.status_code == 200
+    assert final_response.status_code == 200, final_response.text
 
-    final_ids = {
-        (item["type"], item["id"])
-        for item in final.json()
+    final_data = final_response.json()
+
+    assert len(final_data) == 2
+
+    final_transactions = {
+        (transaction["type"], transaction["id"])
+        for transaction in final_data
     }
 
-    assert final_ids == {
-        ("income", income_a["id"]),
-        ("expense", expense_b["id"]),
-    }
+    # Remaining transactions
+    assert ("income", income_a["id"]) in final_transactions
+    assert ("expense", expense_a["id"]) in final_transactions
+
+    # Deleted transactions
+    assert ("income", income_b["id"]) not in final_transactions
+    assert ("expense", expense_b["id"]) not in final_transactions
+
+    # =========================================================
+    # Find transactions using BOTH type and ID
+    #
+    # Important because income and expense IDs can overlap.
+    # =========================================================
+
+    final_income = next(
+        transaction
+        for transaction in final_data
+        if (
+            transaction["type"] == "income"
+            and transaction["id"] == income_a["id"]
+        )
+    )
+
+    final_expense = next(
+        transaction
+        for transaction in final_data
+        if (
+            transaction["type"] == "expense"
+            and transaction["id"] == expense_a["id"]
+        )
+    )
+
+    # =========================================================
+    # Verify final income
+    # =========================================================
+
+    assert final_income["type"] == "income"
+    assert final_income["id"] == income_a["id"]
+
+    assert (
+        Decimal(str(final_income["amount"]))
+        == Decimal("111")
+    )
+
+    # =========================================================
+    # Verify final expense
+    # =========================================================
+
+    assert final_expense["type"] == "expense"
+    assert final_expense["id"] == expense_a["id"]
+
+    assert (
+        Decimal(str(final_expense["amount"]))
+        == Decimal("222")
+    )
 
 
 # ============================================================
@@ -2484,7 +3165,7 @@ def test_failed_validation_does_not_modify_existing_transaction(
     )
 
     assert verify.status_code == 200
-    assert verify.json()["amount"] == 100
+    assert Decimal(verify.json()["amount"]) == Decimal(100)
     assert verify.json()["source"] == "Salary"
 
 

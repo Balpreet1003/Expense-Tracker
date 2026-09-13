@@ -33,6 +33,12 @@ def get_transactions(
 
     transactions = incomes + expenses
 
-    transactions.sort(key=lambda x: (x.date, x.id), reverse=True)
+    transactions.sort(
+        key=lambda x: (
+            x.date, 
+            x.created_at
+        ), 
+        reverse=True
+    )
 
     return transactions

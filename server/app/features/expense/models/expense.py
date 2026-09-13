@@ -1,5 +1,6 @@
-from datetime import date as Date
-from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String, PrimaryKeyConstraint
+from datetime import date as Date, timezone, datetime
+from decimal import Decimal
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -13,8 +14,24 @@ class Expense(Base):
         autoincrement=True
     )
 
-    amount: Mapped[float] = mapped_column(
-        Float, 
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    icon: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        default="",
+    )
+
+    amount: Mapped[Decimal] = mapped_column(
+        Numeric(precision=12, scale=2),
         nullable=False
     )
 
@@ -34,14 +51,17 @@ class Expense(Base):
         default=""
     )
 
-    user_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE"
-        ),
+    created_at: Mapped[DateTime] = Column(
+        DateTime(timezone=True),
         nullable=False,
-        index=True,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    updated_at: Mapped[DateTime] = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     user = relationship(

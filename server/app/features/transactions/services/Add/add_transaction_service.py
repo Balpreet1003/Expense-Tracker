@@ -22,6 +22,7 @@ def add_transaction(
     if transaction_data.type == "income":
 
         income_data = CreateIncomeRequest(
+            icon=transaction_data.icon,
             amount=transaction_data.amount,
             date=transaction_data.date,
             source=transaction_data.source,
@@ -39,6 +40,7 @@ def add_transaction(
     elif transaction_data.type == "expense":
 
         expense_data = CreateExpenseRequest(
+            icon=transaction_data.icon,
             amount=transaction_data.amount,
             date=transaction_data.date,
             category=transaction_data.category,

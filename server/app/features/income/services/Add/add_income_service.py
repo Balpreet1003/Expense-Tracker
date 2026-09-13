@@ -11,6 +11,7 @@ def add_income(
 ):
     try:
         income = Income(
+            icon=income_data.icon,
             amount=income_data.amount,
             date=income_data.date,
             source=income_data.source,
