@@ -27,12 +27,6 @@ class RegisterRequest(BaseModel):
         min_length=8,
     )
 
-    profile_image_url: str = Field(
-        default="",
-        max_length=500,
-        alias="profileImageUrl",
-    )
-
 
 class LoginRequest(BaseModel):
     email: EmailStr

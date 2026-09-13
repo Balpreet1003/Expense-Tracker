@@ -1,11 +1,14 @@
+from unittest.mock import patch
+
 from app.features.auth.models.user import User
 from app.features.auth.utils.password import verify_password
 from app.features.auth.utils.jwt import decode_access_token
 
+
 def test_register_user_success(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
             "password": "password123",
@@ -31,14 +34,30 @@ def test_register_user_success(client):
     assert "password" not in data["user"]
 
 
-def test_register_user_with_profile_image(client):
+@patch(
+    "app.features.auth.services.auth_service.upload_profile_image"
+)
+def test_register_user_with_profile_image(
+    mock_upload_profile_image,
+    client,
+):
+    mock_upload_profile_image.return_value = (
+        "https://example.com/profile.jpg"
+    )
+
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
             "password": "password123",
-            "profileImageUrl": "https://example.com/image.jpg",
+        },
+        files={
+            "profileImage": (
+                "profile.jpg",
+                b"fake-image-content",
+                "image/jpeg",
+            ),
         },
     )
 
@@ -48,10 +67,12 @@ def test_register_user_with_profile_image(client):
 
     assert (
         data["user"]["profileImageUrl"]
-        == "https://example.com/image.jpg"
+        == "https://example.com/profile.jpg"
     )
 
     assert data["token"]
+
+    mock_upload_profile_image.assert_called_once()
 
 
 def test_register_duplicate_email(client):
@@ -63,14 +84,14 @@ def test_register_duplicate_email(client):
 
     response = client.post(
         "/api/v1/auth/register",
-        json=user_data,
+        data=user_data,
     )
 
     assert response.status_code == 201
 
     response = client.post(
         "/api/v1/auth/register",
-        json=user_data,
+        data=user_data,
     )
 
     assert response.status_code == 400
@@ -80,7 +101,7 @@ def test_register_duplicate_email(client):
 def test_register_invalid_email(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "invalid-email",
             "password": "password123",
@@ -93,7 +114,7 @@ def test_register_invalid_email(client):
 def test_register_short_password(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
             "password": "1234567",
@@ -106,7 +127,7 @@ def test_register_short_password(client):
 def test_register_missing_full_name(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "email": "balpreet@example.com",
             "password": "password123",
         },
@@ -118,7 +139,7 @@ def test_register_missing_full_name(client):
 def test_register_empty_full_name(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "",
             "email": "balpreet@example.com",
             "password": "password123",
@@ -131,7 +152,7 @@ def test_register_empty_full_name(client):
 def test_register_long_full_name(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "a" * 101,
             "email": "balpreet@example.com",
             "password": "password123",
@@ -144,7 +165,7 @@ def test_register_long_full_name(client):
 def test_register_password_exactly_8_characters(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
             "password": "password",
@@ -157,7 +178,7 @@ def test_register_password_exactly_8_characters(client):
 def test_register_missing_email(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "password": "password123",
         },
@@ -169,7 +190,7 @@ def test_register_missing_email(client):
 def test_register_missing_password(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
         },
@@ -181,7 +202,7 @@ def test_register_missing_password(client):
 def test_register_empty_email(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "",
             "password": "password123",
@@ -194,7 +215,7 @@ def test_register_empty_email(client):
 def test_register_empty_request_body(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={},
+        data={},
     )
 
     assert response.status_code == 422
@@ -212,48 +233,13 @@ def test_register_malformed_json(client):
     assert response.status_code == 422
 
 
-def test_register_profile_image_url_too_long(client):
-    long_url = "a" * 501
-
-    response = client.post(
-        "/api/v1/auth/register",
-        json={
-            "fullName": "Balpreet Singh",
-            "email": "balpreet@example.com",
-            "password": "password123",
-            "profileImageUrl": long_url,
-        },
-    )
-
-    assert response.status_code == 422
-
-
-def test_register_profile_image_url_exactly_500_characters(client):
-    profile_image_url = "a" * 500
-
-    response = client.post(
-        "/api/v1/auth/register",
-        json={
-            "fullName": "Balpreet Singh",
-            "email": "balpreet@example.com",
-            "password": "password123",
-            "profileImageUrl": profile_image_url,
-        },
-    )
-
-    assert response.status_code == 201
-
-    data = response.json()
-
-    assert data["user"]["profileImageUrl"] == profile_image_url
-
 
 def test_registered_user_password_is_hashed(client, db):
     password = "password123"
 
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
             "password": password,
@@ -292,14 +278,14 @@ def test_duplicate_registration_does_not_create_another_user(
 
     first_response = client.post(
         "/api/v1/auth/register",
-        json=user_data,
+        data=user_data,
     )
 
     assert first_response.status_code == 201
 
     second_response = client.post(
         "/api/v1/auth/register",
-        json=user_data,
+        data=user_data,
     )
 
     assert second_response.status_code == 400
@@ -316,7 +302,7 @@ def test_duplicate_registration_does_not_create_another_user(
 def test_register_token_belongs_to_registered_user(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "balpreet@example.com",
             "password": "password123",
@@ -338,7 +324,7 @@ def test_register_token_belongs_to_registered_user(client):
 def test_register_full_name_with_one_character(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "A",
             "email": "balpreet@example.com",
             "password": "password123",
@@ -351,7 +337,7 @@ def test_register_full_name_with_one_character(client):
 def test_register_full_name_with_exactly_100_characters(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "A" * 100,
             "email": "balpreet@example.com",
             "password": "password123",
@@ -364,7 +350,7 @@ def test_register_full_name_with_exactly_100_characters(client):
 def test_register_response_uses_camel_case_fields(client):
     response = client.post(
         "/api/v1/auth/register",
-        json={
+        data={
             "fullName": "Balpreet Singh",
             "email": "test@example.com",
             "password": "password123",
@@ -384,3 +370,64 @@ def test_register_response_uses_camel_case_fields(client):
     assert "profile_image_url" not in user
     assert "created_at" not in user
     assert "updated_at" not in user
+
+
+def test_register_with_invalid_profile_image_type(
+    client,
+):
+    response = client.post(
+        "/api/v1/auth/register",
+        data={
+            "fullName": "Balpreet Singh",
+            "email": "balpreet@example.com",
+            "password": "password123",
+        },
+        files={
+            "profileImage": (
+                "document.pdf",
+                b"fake-pdf-content",
+                "application/pdf",
+            ),
+        },
+    )
+
+    assert response.status_code == 400
+
+    assert response.json()["detail"] == (
+        "Only JPG, JPEG, and PNG images are allowed"
+    )
+
+
+@patch(
+    "app.features.auth.services.auth_service.upload_profile_image"
+)
+def test_register_with_png_profile_image(
+    mock_upload_profile_image,
+    client,
+):
+    mock_upload_profile_image.return_value = (
+        "https://example.com/profile.png"
+    )
+
+    response = client.post(
+        "/api/v1/auth/register",
+        data={
+            "fullName": "Balpreet Singh",
+            "email": "balpreet@example.com",
+            "password": "password123",
+        },
+        files={
+            "profileImage": (
+                "profile.png",
+                b"fake-image-content",
+                "image/png",
+            ),
+        },
+    )
+
+    assert response.status_code == 201
+
+    assert (
+        response.json()["user"]["profileImageUrl"]
+        == "https://example.com/profile.png"
+    )

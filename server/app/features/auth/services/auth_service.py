@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
 
 from app.features.auth.models.user import User
@@ -9,6 +9,7 @@ from app.features.auth.schemas.schemas import (
     LoginRequest
 )
 from app.features.auth.utils.jwt import create_access_token
+from app.features.auth.utils.image_upload import upload_profile_image
 from app.features.auth.utils.password import (
     verify_password,
     hash_password
@@ -17,6 +18,7 @@ from app.features.auth.utils.password import (
 
 def register_user(
     register_data: RegisterRequest,
+    user_profile_image: UploadFile | None,
     db: Session,
 ) -> AuthResponse:
 
@@ -32,6 +34,13 @@ def register_user(
             detail="User already exists",
         )
 
+    profile_image_url = ""
+
+    if user_profile_image:
+        profile_image_url = upload_profile_image(
+            user_profile_image
+        )
+
     hashed_password = hash_password(
         register_data.password
     )
@@ -40,7 +49,7 @@ def register_user(
         full_name=register_data.full_name,
         email=register_data.email,
         password=hashed_password,
-        profile_image_url=register_data.profile_image_url,
+        profile_image_url=profile_image_url,
     )
 
     try:
