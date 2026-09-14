@@ -11,29 +11,31 @@ export const addThousandsSeparator = (number) => {
       return fractionPart? `${formattedInteger}.${fractionPart}` : formattedInteger;
 };
 
-export const prepareExpenseChartData = (data= []) => {
-      const chartData =data.map((item) => ({
-            category: item.category,
-            amount: item.amount,
-      }));
- 
-      return chartData;
-}
+export const prepareExpenseChartData = (data = []) => {
+  const chartData = data.map((item) => {
+    const date = new Date(item.date);
+    const day = date.getDate();
 
-export const uploadImage = async (imageFile) => {
-      const formData = new FormData();
-      formData.append("image", imageFile);
-      
-      try {
-            const response = await axiosInstance.post(API_PATHS.IMAGE.UPLOAD_IMAGE, formData, {
-                  headers: {
-                        "Content-Type": "multipart/form-data",
-                  },
-            });
-            return response.data;
-      } 
-      catch (error) {
-            console.error("Error uploading image:", error);
-            throw error;
-      } 
-}
+    const suffix =
+      day >= 11 && day <= 13
+        ? "th"
+        : day % 10 === 1
+        ? "st"
+        : day % 10 === 2
+        ? "nd"
+        : day % 10 === 3
+        ? "rd"
+        : "th";
+
+    const month = date.toLocaleString("default", {
+      month: "short",
+    });
+
+    return {
+      amount: item.total_amount,
+      date: `${day}${suffix} ${month}`,
+    };
+  });
+
+  return chartData;
+};

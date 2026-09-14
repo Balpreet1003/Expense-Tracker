@@ -16,13 +16,13 @@ const ExpenseTransactions = ({transactions, onSeeMore}) => {
                   </div>
 
                   <div className="mt-6">
-                        {transactions?.slice(0, 5).map((expense) => (
+                        {transactions?.map((expense, index) => (
                               <TransactionInfoCard 
-                                key={expense._id}
+                                key={index}
                                 title={expense.category}
                                 icon={expense.icon}
                                 date={moment(expense.date).format('DD MMM YYYY')}
-                                amount={expense.amount}
+                                amount={expense.total_amount}
                                 type="expense"
                                 hideDeleteBtn
                               />

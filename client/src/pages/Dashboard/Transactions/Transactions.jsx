@@ -20,6 +20,7 @@ const Transactions = () => {
       const [openDeleteAlert, setOpenDeleteAlert] = React.useState({
             show: false,
             data: null,
+            type: null
       });
 
       //get all transactions details
@@ -29,7 +30,7 @@ const Transactions = () => {
             setIsLoading(true);
 
             try {
-                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL_TRANSACTIONS);
+                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL);
 
                   if(response.data) setTransactionData(response.data);
             }
@@ -41,58 +42,98 @@ const Transactions = () => {
             }
       };
 
-      // Handel Add transactions
+      // Handle Add transactions
       const handelAddTransactions = async (transaction) => {
-            const {userId, icon, type, category, amount, date, cards, description} = transaction;
+            const {
+                  userId,
+                  icon,
+                  type,
+                  category,
+                  source,
+                  amount,
+                  date,
+                  cards,
+                  description,
+            } = transaction;
 
-            if (!category.trim()) {
-                  toast.error("Source is required");
-                  return;
-            }
+            const transactionType = type?.toLowerCase();
 
-            if(!amount || isNaN(amount) || Number(amount) <= 0){
+            // Validate amount
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
                   toast.error("Amount should be valid number greater than 0.");
                   return;
             }
 
-            if(!date){
+            // Validate date
+            if (!date) {
                   toast.error("Date is required");
                   return;
             }
-            
-            if(!type){
+
+            // Validate transaction type
+            if (!transactionType) {
                   toast.error("Transaction type is required");
                   return;
             }
 
+            // Validate category for expense
+            if ( transactionType === "expense" && !category?.trim()) {
+                  toast.error("Category is required");
+                  return;
+            }
+
+            // Validate source for income
+            if ( transactionType === "income" && !source?.trim() ) {
+                  toast.error("Source is required");
+                  return;
+            }
+
+            // Prepare request data
+            const requestData = {
+                  userId,
+                  icon,
+                  type: transactionType,
+                  amount: Number(amount),
+                  date: new Date(date),
+                  description,
+            };
+
+            // Add category for expense
+            if (transactionType === "expense") {
+                  requestData.category = category.trim();
+            }
+
+            // Add source for income
+            if (transactionType === "income") {
+                  requestData.source = source.trim();
+            }
+
             try {
-                  await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
-                        userId,
-                        icon,
-                        type,
-                        category,
-                        amount,
-                        date: new Date(date),
-                        cards,
-                        description
-                  });
+                  await axiosInstance.post(
+                        API_PATHS.TRANSACTIONS.CREATE,
+                        requestData
+                  );
 
                   setOpenAddTransactionsMode(false);
+
                   toast.success("Transaction added successfully");
+
                   fetchTransactionDetails();
-            }
-            catch (error) {
-                  console.error("Failed to add transaction: ", 
-                        error.response?.data?.message || error.message
+            } catch (error) {
+                  console.error(
+                        "Failed to add transaction:",
+                        error.response?.data?.message ||
+                        error.response?.data?.detail ||
+                        error.message
                   );
             }
       };
 
       // Handel Delete Transaction
-      const deleteTransaction = async (TransactionId) => {
+      const deleteTransaction = async (TransactionType, TransactionId) => {
             try {
-                  await axiosInstance.delete(API_PATHS.TRANSACTIONS.DELETE_TRANSACTION(TransactionId));
-                  setOpenDeleteAlert({ show: false, data: null });
+                  await axiosInstance.delete(API_PATHS.TRANSACTIONS.DELETE(TransactionType, TransactionId));
+                  setOpenDeleteAlert({ show: false, data: null, type: null });
                   toast.success("Transaction deleted successfully");
                   fetchTransactionDetails();
             }
@@ -106,7 +147,7 @@ const Transactions = () => {
       // handle download transaction details
       const handleDownloadTransactionDetails = async () => {
             try {
-                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.DOWNLOAD_TRANSACTIONS, { responseType: 'blob' });
+                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.DOWNLOAD, { responseType: 'blob' });
 
                   //create a url fot the blob
                   const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -144,8 +185,8 @@ const Transactions = () => {
 
                         <TransactionsList
                               transactions={transactionData}
-                              onDeleteTransaction={(id) => {
-                                    setOpenDeleteAlert({ show: true, data: id })
+                              onDeleteTransaction={(type, id) => {
+                                    setOpenDeleteAlert({ show: true, data: id, type: transactionData.find(t => t.id === id)?.type });
                               }}
                               onDownload = {handleDownloadTransactionDetails}
                         />
@@ -160,12 +201,12 @@ const Transactions = () => {
 
                         <Modal
                               isOpen={openDeleteAlert.show}
-                              onClose={() => setOpenDeleteAlert({ show: false, data: null })}
+                              onClose={() => setOpenDeleteAlert({ show: false, data: null, type: null })}
                               title="Delete Transaction"
                         >
                               <DeleteAlert
                                     content="Are you sure you want to delete this transaction?"
-                                    onDelete={() => deleteTransaction(openDeleteAlert.data)}
+                                    onDelete={() => deleteTransaction(openDeleteAlert.type, openDeleteAlert.data)}
                               />
                         </Modal>
                   </div>

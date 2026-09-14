@@ -21,6 +21,7 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
                         } else {
                               acc[dateKey].amount += Number(txn.amount) || 0;
                         }
+                        console.log("groupedIncomeData", acc);
                         return acc;
                   }, {})
             );

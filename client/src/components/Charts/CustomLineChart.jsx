@@ -28,7 +28,7 @@ const CustomLineChart = ({ data }) => {
                                     </linearGradient>
                               </defs>
 
-                              <XAxis dataKey="month" tick={{fontSize:12, fill:"#555", stroke:"none"}} />
+                              <XAxis dataKey="date" tick={{fontSize:12, fill:"#555", stroke:"none"}} />
                               <YAxis tick={{fontSize:12, fill:"#555", stroke:"none"}} />
                               <Tooltip content={CustomTooltip} />
 

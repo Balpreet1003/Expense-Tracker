@@ -42,10 +42,11 @@ const Login = () => {
                 email,
                 password,
             });
-            const { token, user } = response.data;
+            const { user, token } = response.data;
 
             if(token) {
                 localStorage.setItem('token', token);
+                localStorage.setItem("user", JSON.stringify(user));
                 updateUser(user);
                 navigate('/dashboard');
             }

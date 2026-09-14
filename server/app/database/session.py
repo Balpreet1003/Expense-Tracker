@@ -10,6 +10,8 @@ load_dotenv()
 # Create a SQLAlchemy engine db url from the .env file
 engine = create_engine(
     os.getenv("DB_URL"), 
+    pool_pre_ping=True,
+    pool_recycle=1800,
     echo=True
 )
 

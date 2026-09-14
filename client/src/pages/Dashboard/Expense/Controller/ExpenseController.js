@@ -1,13 +1,16 @@
 import moment from "moment";
 
 export const prepareExpenseBarChartData = (data = []) => {
-      const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const chartData = data.map(item => ({
+    date: moment(item.date).format("Do MMM YY"),
+    amount: item.amount,
+  }));
 
-      const chartData = sortedData.map((item) => ({
-            month: moment(item?.date).format("Do MMM YY"),
-            amount: item?.amount,
-            category: item?.category,
-      })); 
-      
-      return chartData;
-}
+  chartData.sort((a, b) => {
+    const dateA = moment(a.date, "Do MMM YY");
+    const dateB = moment(b.date, "Do MMM YY");
+    return dateA - dateB;
+  });
+
+  return chartData;
+};

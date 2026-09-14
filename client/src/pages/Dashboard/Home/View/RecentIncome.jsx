@@ -14,13 +14,13 @@ const RecentIncome = ({data, onSeeMore}) => {
                         </button>
                   </div>
 
-                  {data?.slice(0, 5).map((income) => (
+                  {data?.map((income, index) => (
                         <TransactionInfoCard
-                              key={income._id}
-                              title={income.category}
+                              key={index}
+                              title={income.source}
                               icon={income.icon}
                               date={moment(income.date).format('DD MMM YYYY')}
-                              amount={income.amount}
+                              amount={income.total_amount}
                               type="income"
                               hideDeleteBtn
                         />

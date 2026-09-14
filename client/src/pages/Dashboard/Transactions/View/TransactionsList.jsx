@@ -18,13 +18,13 @@ const TransactionsList = ({ transactions, onDeleteTransaction, onDownload }) => 
                   <div className="grid grid-cols-1 md:grid-cols-2">
                         {transactions.map((transaction) => (
                               <TransactionInfoCard 
-                                    key={transaction._id}
-                                    title={transaction.category}
+                                    key={transaction.id}
+                                    title={(transaction.type === "expense" ? transaction.category : transaction.source)}
                                     icon={transaction.icon}
                                     date={moment(transaction.date).format('DD MMM YYYY')}
                                     amount={transaction.amount}
                                     type={transaction.type} // <-- this is correct
-                                    onDelete={() => onDeleteTransaction(transaction._id)}
+                                    onDelete={() => onDeleteTransaction(transaction.type, transaction.id)}
                               />
                         ))}
                   </div>

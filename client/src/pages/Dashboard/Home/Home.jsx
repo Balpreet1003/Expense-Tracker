@@ -13,7 +13,7 @@ import { addThousandsSeparator } from './Controller/HomeController';
 import RecentTransactions from './View/RecentTransactions';
 import FinanceOverview from './View/FinanceOverview';
 import ExpenseTransactions from './View/ExpenseTransactions';
-import Last30DaysExpenses from './View/Last30DaysExpenses';
+import LastWeekBarGraph from './View/LastWeekBarGraph';
 import RecentIncome from './View/RecentIncome';
 
 const Home = () => {
@@ -30,8 +30,10 @@ const Home = () => {
         setLoading(true);
 
         try {
-            const response = await axiosInstance.get(API_PATHS.DASHBOARD.GET_DASHBOARD_DATA);
-            if(response.data) setDashboardData(response.data);
+            const response = await axiosInstance.get(API_PATHS.DASHBOARD.SUMMARY);
+            console.log("Dashboard data fetched successfully: ", response.data);
+            if(response.data)
+              setDashboardData(response.data);
         } 
         catch (error) {
             console.error("Failed to fetch dashboard data: ", error);
@@ -55,50 +57,51 @@ const Home = () => {
                 <InfoCard
                   icon={<IoCard/>}
                   label="Total Balance"
-                  value={addThousandsSeparator(dashboardData?.totalBalance || 0)}
+                  value={addThousandsSeparator(dashboardData?.total_transaction.total_balance || 0)}
                   color="bg-[#875cf5]"
                 />
                 <InfoCard
                   icon={<LuWalletMinimal/>}
                   label="Total Income"
-                  value={addThousandsSeparator(dashboardData?.totalIncome || 0)}
+                  value={addThousandsSeparator(dashboardData?.total_transaction.total_income || 0)}
                   color="bg-orange-500"
                 />
                 <InfoCard
                   icon={<LuHandCoins/>}
                   label="Total Expense"
-                  value={addThousandsSeparator(dashboardData?.totalExpense || 0)}
+                  value={addThousandsSeparator(dashboardData?.total_transaction.total_expense || 0)}
                   color="bg-red-500"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                 <RecentTransactions 
-                  transactions={dashboardData?.recentTransactions}
+                  transactions={dashboardData?.recent_transactions}
                   onSeeMore={ ()=> navigate('/transactions')  }
                 />
                 <FinanceOverview
-                  totalBalance={dashboardData?.totalBalance || 0}
-                  totalIncome={dashboardData?.totalIncome || 0}
-                  totalExpense={dashboardData?.totalExpense || 0}
+                  totalBalance={dashboardData?.total_transaction.total_balance || 0}
+                  totalIncome={dashboardData?.total_transaction.total_income || 0}
+                  totalExpense={dashboardData?.total_transaction.total_expense || 0}
                 />
 
                 <ExpenseTransactions
-                  transactions={dashboardData?.last30DaysExpense?.transactions || []}
+                  transactions={dashboardData?.one_week_expense || []}
                   onSeeMore={ ()=> navigate('/expense')  }
                 />
 
-                <Last30DaysExpenses
-                  data={dashboardData?.last30DaysExpense?.transactions || []}
+                <LastWeekBarGraph
+                  heading="Last Week Expenses"
+                  data={dashboardData?.one_week_expense || []}
                 />
 
                 <RecentIncome
-                  data={dashboardData?.last60DaysIncome?.transactions?.slice(0,4) || []}
+                  data={dashboardData?.one_week_income || []}
                   onSeeMore={ ()=> navigate('/income')  }
                 />
 
-                <RecentIncome
-                  data={dashboardData?.last60DaysIncome?.transactions || []}
-                  onSeeMore={ ()=> navigate('/income')  }
+                <LastWeekBarGraph
+                  heading="Last Week Incomes"
+                  data={dashboardData?.one_week_income || []}
                 />
               </div>
             </>

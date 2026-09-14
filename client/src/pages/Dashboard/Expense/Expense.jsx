@@ -31,14 +31,11 @@ const Expense = () => {
 
             try {
                   // Fetch all transactions
-                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL_TRANSACTIONS);
+                  const response = await axiosInstance.get(API_PATHS.EXPENSE.GET_ALL);
 
                   // Filter only expense transactions
                   if (response.data) {
-                        const expenseOnly = response.data.filter(
-                              txn => txn.type && txn.type.toLowerCase() === "expense"
-                        );
-                        setExpenseData(expenseOnly);
+                        setExpenseData(response.data);
                   }
             }
             catch (error) {
@@ -67,17 +64,10 @@ const Expense = () => {
                   toast.error("Date is required");
                   return;
             }
-            
-            if(!type){
-                  toast.error("Transaction type is required");
-                  return;
-            }
 
             try {
-                  await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
-                        userId,
+                  await axiosInstance.post(API_PATHS.EXPENSE.CREATE, {
                         icon,
-                        type,
                         category,
                         amount,
                         date: new Date(date),
@@ -98,7 +88,7 @@ const Expense = () => {
       // Handel Delete Expense
       const deleteExpense = async (expenseId) => {
             try {
-                  await axiosInstance.delete(API_PATHS.TRANSACTIONS.DELETE_TRANSACTION(expenseId));
+                  await axiosInstance.delete(API_PATHS.EXPENSE.DELETE(expenseId));
                   setOpenDeleteAlert({ show: false, data: null });
                   toast.success("Expense deleted successfully");
                   fetchExpenseDetails();
@@ -113,7 +103,7 @@ const Expense = () => {
       // handle download expense details
       const handleDownloadExpenseDetails = async () => {
             try {
-                  const response = await axiosInstance.get(API_PATHS.EXPENSE.DOWNLOAD_EXPENSE, {
+                  const response = await axiosInstance.get(API_PATHS.EXPENSE.DOWNLOAD, {
                         responseType: 'blob'
                   });
 

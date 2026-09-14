@@ -30,14 +30,11 @@ const Income = () => {
 
             try {
                   // Fetch all transactions
-                  const response = await axiosInstance.get(API_PATHS.TRANSACTIONS.GET_ALL_TRANSACTIONS);
+                  const response = await axiosInstance.get(API_PATHS.INCOME.GET_ALL);
 
                   // Filter only income transactions
                   if(response.data) {
-                        const incomeOnly = response.data.filter(
-                              txn => txn.type && txn.type.toLowerCase() === "income"
-                        );
-                        setIncomeData(incomeOnly);
+                        setIncomeData(response.data);
                   }
             }
             catch (error) {
@@ -50,10 +47,10 @@ const Income = () => {
 
       // Handle Add Income (should post to transaction API)
       const handelAddIncome = async (income) => {
-            const {userId, icon, type, category, amount, date, description} = income;
+            const {userId, icon, type, source, amount, date, description} = income;
 
-            if (!category.trim()) {
-                  toast.error("Catagory is required");
+            if (!source.trim()) {
+                  toast.error("Source is required");
                   return;
             }
 
@@ -66,21 +63,14 @@ const Income = () => {
                   toast.error("Date is required");
                   return;
             }
-            
-            if(!type){
-                  toast.error("Transaction type is required");
-                  return;
-            }
 
             try {
-                  await axiosInstance.post(API_PATHS.TRANSACTIONS.ADD_TRANSACTION, {
-                        userId,
+                  await axiosInstance.post(API_PATHS.INCOME.CREATE, {
                         icon,
-                        type,
-                        category,
                         amount,
                         date: new Date(date),
-                        description
+                        description,
+                        source
                   });
 
                   setOpenAddIncomeMode(false);
@@ -97,7 +87,7 @@ const Income = () => {
       // Handle Delete Income (should delete from transaction API)
       const deleteIncome = async (incomeId) => {
             try {
-                  await axiosInstance.delete(API_PATHS.TRANSACTIONS.DELETE_TRANSACTION(incomeId));
+                  await axiosInstance.delete(API_PATHS.INCOME.DELETE(incomeId));
                   setOpenDeleteAlert({ show: false, data: null });
                   toast.success("Income deleted successfully");
                   fetchIncomeDetails();
@@ -113,7 +103,7 @@ const Income = () => {
       const handleDownloadIncomeDetails = async () => {
             try {
                   const response = await axiosInstance.get(
-                        API_PATHS.INCOME.DOWNLOAD_INCOME, // <-- new endpoint
+                        API_PATHS.INCOME.DOWNLOAD,
                         { responseType: 'blob' }
                   );
 

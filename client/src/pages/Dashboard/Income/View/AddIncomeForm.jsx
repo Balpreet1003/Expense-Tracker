@@ -20,7 +20,7 @@ const AddIncomeForm = ({onAddIncome}) => {
       const [income, setIncome] = React.useState({
             icon:"",
             type:"Income",
-            category:"",
+            source:"",
             amount:"",
             date: "",
             description:"",
@@ -51,9 +51,9 @@ const AddIncomeForm = ({onAddIncome}) => {
                         placeholder="Select Type"
                   />
                   <Input
-                        value={income.category}
-                        onChange={e => handleInputChange("category", e.target.value)}
-                        label="Catagory"
+                        value={income.source}
+                        onChange={e => handleInputChange("source", e.target.value)}
+                        label="Source"
                         placeholder="e.g. Salary, Gifts, Freelancing, Dinner, Shopping etc."
                         type="text"
                   />
