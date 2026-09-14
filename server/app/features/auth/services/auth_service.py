@@ -6,7 +6,8 @@ from app.features.auth.schemas.schemas import (
     AuthResponse,
     RegisterRequest,
     UserResponse,
-    LoginRequest
+    LoginRequest,
+    UpdateUserRequest
 )
 from app.features.auth.utils.jwt import create_access_token
 from app.features.auth.utils.image_upload import upload_profile_image
@@ -109,4 +110,63 @@ def login_user(
     return AuthResponse(
         user=user_response,
         token=token,
+    )
+
+
+def update_user_profile(
+    update_data: UpdateUserRequest,
+    user_profile_image: UploadFile | None,
+    current_user: User,
+    db: Session,
+) -> UserResponse:
+
+    has_changes = False
+
+    # Update full name
+    if update_data.full_name is not None:
+
+        if current_user.full_name != update_data.full_name:
+            current_user.full_name = update_data.full_name
+            has_changes = True
+
+    # Update password
+    if update_data.password is not None:
+
+        hashed_password = hash_password(
+            update_data.password
+        )
+
+        current_user.password = hashed_password
+        has_changes = True
+
+    # Update profile image
+    if user_profile_image is not None:
+
+        profile_image_url = upload_profile_image(
+            user_profile_image
+        )
+
+        current_user.profile_image_url = (
+            profile_image_url
+        )
+
+        has_changes = True
+
+    # No update fields provided
+    if not has_changes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one field is required to update the profile",
+        )
+
+    try:
+        db.commit()
+        db.refresh(current_user)
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return UserResponse.model_validate(
+        current_user
     )

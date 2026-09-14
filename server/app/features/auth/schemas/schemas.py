@@ -67,3 +67,20 @@ class UserResponse(BaseModel):
 class AuthResponse(BaseModel):
     user: UserResponse
     token: str
+
+class UpdateUserRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+
+    full_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+        alias="fullName",
+    )
+
+    password: str | None = Field(
+        default=None,
+        min_length=8,
+    )
