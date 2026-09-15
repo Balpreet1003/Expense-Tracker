@@ -1,6 +1,6 @@
-export const BASE_URL = import.meta.env.SERVER_URL;
+export const BASE_URL = import.meta.env.VITE_SERVER_URL;
 
-export const AI_BASE_URL = import.meta.env.AI_BASE_URL;
+export const AI_BASE_URL = import.meta.env.VITE_AI_BASE_URL;
 
 export const API_PATHS = {
   AUTH: {
